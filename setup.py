@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='IHSetLim',
+    name='IHSetPreprocess',
     version='0.1.0',
     packages=find_packages(),
     include_package_data=True,
@@ -16,7 +16,7 @@ setup(
     author='Changbin Lim',
     author_email='limcs@unican.es',
     description='IH-SET Lim et al. (2022)',
-    url='https://github.com/IHCantabria/IHSetLim',
+    url='https://github.com/IHCantabria/IHSetPreprocess',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',

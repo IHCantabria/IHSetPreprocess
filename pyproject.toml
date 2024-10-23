@@ -23,7 +23,7 @@ classifiers = [
 ]
 dynamic = ["version", "description"]
 
-dependencies = ["numpy", "pytest >=7", "scipy", "shapely", "xarray", "matplotlib","pandas", "netCDF4", "setuptools", "seaborn"]
+dependencies = ["numpy", "pytest >=7", "scipy", "shapely", "xarray", "matplotlib","pandas", "netCDF4", "setuptools", "seaborn", "windrose"]
 
 [project.optional-dependencies]
 dev = ["flit", "black", "sphinx", "myst-nb", "sphinx_rtd_theme", "pre-commit"]
