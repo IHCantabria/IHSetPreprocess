@@ -274,7 +274,6 @@ class obs_data(object):
                 self.data = pd.read_csv(self.filePath+'/Obs.csv')
                 self.dataTime = self.data['Datetime'].values
                 self.dt = pd.to_datetime(self.dataTime)
-                print(self.dt)
                 self.dataSource = 'CSV file'
         except:
                 pass
