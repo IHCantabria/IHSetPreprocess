@@ -31,6 +31,9 @@ class wave_data(object):
         self.readWaves()
         if self.dt is not None:
                 self.saveData(path)
+                self.HsRose(path)
+                self.TpRose(path)
+                self.densityHsTp(path)
                 
     def readWaves(self):
         """
