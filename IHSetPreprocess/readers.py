@@ -45,8 +45,8 @@ class wave_data(object):
             self.hs = self.data['hs'].flatten()
             self.tp = self.data['tps'].flatten()
             self.dir = self.data['dir'].flatten()
-            self.lat = self.data['lat'].flatten()[0]
-            self.lon = self.data['lon'].flatten()[0]
+            self.lat = self.data['lat'].flatten()
+            self.lon = self.data['lon'].flatten()
             self.dataSource = 'IH-DATA'
         except:
             pass
@@ -166,8 +166,8 @@ class sl_data(object):
             self.time_surge = pd.to_datetime(Time - 719529, unit='d').round('s').to_pydatetime()
             self.time_surge = np.vectorize(lambda x: np.datetime64(x))(self.time_surge)
             self.surge = GOS['zeta'].flatten()
-            self.lat_surge = GOS['lat_zeta'].flatten()[0]
-            self.lon_surge = GOS['lon_zeta'].flatten()[0]
+            self.lat_surge = GOS['lat_zeta'].flatten()
+            self.lon_surge = GOS['lon_zeta'].flatten()
             self.dataSource_surge = 'IH-DATA'
         except:
                 pass
@@ -196,8 +196,8 @@ class sl_data(object):
             self.time_tide = pd.to_datetime(Time - 719529, unit='d').round('s').to_pydatetime()
             self.time_tide = np.vectorize(lambda x: np.datetime64(x))(self.time_tide)
             self.tide = GOT['tide'].flatten()
-            self.lat_tide = GOT['lat_tide'].flatten()[0]
-            self.lon_tide = GOT['lon_tide'].flatten()[0]
+            self.lat_tide = GOT['lat_tide'].flatten()
+            self.lon_tide = GOT['lon_tide'].flatten()
             self.dataSource_tide = 'IH-DATA'
         except:
                 pass
@@ -241,7 +241,7 @@ class obs_data(object):
         self.dataSource = None
         self.time_obs = None
         self.obs = None
-        self.ntrs = 1
+        self.ntrs = np.array([1])
         
     def readObs(self, path):
         """
