@@ -42,7 +42,7 @@ class save_SET_standard_netCDF(object):
         """ Set global attributes """
         # Global attributes
 
-        data_sources = f'Waves: {self.waves.dataSource}, Surge: {self.sl.dataSource_surge}, Tide: {self.obs.dataSource_tide}, Obs: {self.obs.dataSource}'
+        data_sources = f'Waves: {self.waves.dataSource}, Surge: {self.sl.dataSource_surge}, Tide: {self.sl.dataSource_tide}, Obs: {self.obs.dataSource}'
         
         creation_date = datetime.now().strftime("%Y-%m-%d")
 

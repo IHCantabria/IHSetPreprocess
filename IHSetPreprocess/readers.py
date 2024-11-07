@@ -231,11 +231,10 @@ class obs_data(object):
     
     This class reads input datasets, performs its preprocess.
     """
-    def __init__(self, path):
+    def __init__(self):
         """
         Define the file path, data source, and dataset
         """
-        self.filePath = path
         self.dataSource = None
         self.time_obs = None
         self.obs = None
@@ -249,6 +248,7 @@ class obs_data(object):
                 data = pd.read_csv(self.filePath)
                 Time = data['Datetime'].values
                 self.time_obs = pd.to_datetime(Time)
+                self.obs = data['Obs']
                 self.dataSource = 'CSV file'
         except:
                 pass
