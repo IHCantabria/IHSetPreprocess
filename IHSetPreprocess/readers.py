@@ -59,8 +59,11 @@ class wave_data(object):
             self.dataSource = 'CSV file'
         except:
             pass
-                
-        return 'Data loaded correctly'
+
+        if self.dataSource == None:
+            return 'Wrong data format'
+        else:
+            return 'Data loaded correctly'
             
     # def HsRose(self):
     #     """
