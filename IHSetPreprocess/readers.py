@@ -39,13 +39,13 @@ class wave_data(object):
 
         try:
             self.data = scipy.io.loadmat(self.filePath)
-            self.dataTime = self.data["data"]['time'][0][0].flatten()
+            self.dataTime = self.data['time'][0][0].flatten()
             self.time = pd.to_datetime(self.dataTime - 719529, unit='d').round('s').to_pydatetime()
-            self.hs = self.data["data"]['hs'][0][0].flatten()
-            self.tp = self.data["data"]['t02'][0][0].flatten()
-            self.dir = self.data["data"]['dir'][0][0].flatten()
-            self.lat = self.data["data"]['lat'][0][0].flatten()
-            self.lon = self.data["data"]['lon'][0][0].flatten()
+            self.hs = self.data['hs'][0][0].flatten()
+            self.tp = self.data['t02'][0][0].flatten()
+            self.dir = self.data['dir'][0][0].flatten()
+            self.lat = self.data['lat'][0][0].flatten()
+            self.lon = self.data['lon'][0][0].flatten()
             self.dataSource = 'IH-DATA'
         except:
             pass
@@ -161,11 +161,11 @@ class sl_data(object):
         """
         try:
             GOS = scipy.io.loadmat(filePath)
-            Time = GOS["data"]['time'][0][0].flatten()
+            Time = GOS['time'][0][0].flatten()
             self.time_surge = pd.to_datetime(Time - 719529, unit='d').round('s').to_pydatetime()
-            self.surge = GOS["data"]['zeta'][0][0].flatten()
-            self.lat_surge = GOS["data"]['lat_zeta'][0][0].flatten()
-            self.lon_surge = GOS["data"]['lon_zeta'][0][0].flatten()
+            self.surge = GOS['zeta'][0][0].flatten()
+            self.lat_surge = GOS['lat_zeta'][0][0].flatten()
+            self.lon_surge = GOS['lon_zeta'][0][0].flatten()
             self.dataSource_surge = 'IH-DATA'
         except:
                 pass
@@ -190,11 +190,11 @@ class sl_data(object):
         """
         try:
             GOT = scipy.io.loadmat(filePath)
-            Time = GOT["data"]['time'][0][0].flatten()
+            Time = GOT['time'][0][0].flatten()
             self.time_tide = pd.to_datetime(Time - 719529, unit='d').round('s').to_pydatetime()
-            self.tide = GOT["data"]['tide'][0][0].flatten()
-            self.lat_tide = GOT["data"]['lat_tide'][0][0].flatten()
-            self.lon_tide = GOT["data"]['lon_tide'][0][0].flatten()
+            self.tide = GOT['tide'][0][0].flatten()
+            self.lat_tide = GOT['lat_tide'][0][0].flatten()
+            self.lon_tide = GOT['lon_tide'][0][0].flatten()
             self.dataSource_tide = 'IH-DATA'
         except:
                 pass
