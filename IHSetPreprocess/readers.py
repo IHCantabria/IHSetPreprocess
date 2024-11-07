@@ -241,6 +241,7 @@ class obs_data(object):
         self.dataSource = None
         self.time_obs = None
         self.obs = None
+        self.ntrs = 1
         
     def readObs(self, path):
         """

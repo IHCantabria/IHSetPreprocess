@@ -115,7 +115,7 @@ class save_SET_standard_netCDF(object):
                     "standard_name": "longitude",
                     "long_name": "Longitude"
                 }),
-                "ntrs": ("ntrs", self.ntrs, {
+                "ntrs": ("ntrs", self.obs.ntrs, {
                     "units": "number_of",
                     "standard_name": "number_of_trs",
                     "long_name": "Number of Transects"
