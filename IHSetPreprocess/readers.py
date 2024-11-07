@@ -4,7 +4,7 @@ import pandas as pd
 # import matplotlib.pyplot as plt
 # from windrose import WindroseAxes
 # import seaborn as sns
-# import numpy as np
+import numpy as np
 
 
 class wave_data(object):
@@ -41,11 +41,12 @@ class wave_data(object):
             self.data = scipy.io.loadmat(self.filePath)
             self.dataTime = self.data['time'].flatten()
             self.time = pd.to_datetime(self.dataTime - 719529, unit='d').round('s').to_pydatetime()
+            self.time = np.vectorize(lambda x: np.datetime64(x))(self.time)
             self.hs = self.data['hs'].flatten()
-            self.tp = self.data['t02'].flatten()
+            self.tp = self.data['tps'].flatten()
             self.dir = self.data['dir'].flatten()
-            self.lat = self.data['lat'].flatten()
-            self.lon = self.data['lon'].flatten()
+            self.lat = self.data['lat'].flatten()[0]
+            self.lon = self.data['lon'].flatten()[0]
             self.dataSource = 'IH-DATA'
         except:
             pass
@@ -161,11 +162,12 @@ class sl_data(object):
         """
         try:
             GOS = scipy.io.loadmat(filePath)
-            Time = GOS['time'][0][0].flatten()
+            Time = GOS['time'].flatten()
             self.time_surge = pd.to_datetime(Time - 719529, unit='d').round('s').to_pydatetime()
+            self.time_surge = np.vectorize(lambda x: np.datetime64(x))(self.time_surge)
             self.surge = GOS['zeta'].flatten()
-            self.lat_surge = GOS['lat_zeta'].flatten()
-            self.lon_surge = GOS['lon_zeta'].flatten()
+            self.lat_surge = GOS['lat_zeta'].flatten()[0]
+            self.lon_surge = GOS['lon_zeta'].flatten()[0]
             self.dataSource_surge = 'IH-DATA'
         except:
                 pass
@@ -192,9 +194,10 @@ class sl_data(object):
             GOT = scipy.io.loadmat(filePath)
             Time = GOT['time'].flatten()
             self.time_tide = pd.to_datetime(Time - 719529, unit='d').round('s').to_pydatetime()
+            self.time_tide = np.vectorize(lambda x: np.datetime64(x))(self.time_tide)
             self.tide = GOT['tide'].flatten()
-            self.lat_tide = GOT['lat_tide'].flatten()
-            self.lon_tide = GOT['lon_tide'].flatten()
+            self.lat_tide = GOT['lat_tide'].flatten()[0]
+            self.lon_tide = GOT['lon_tide'].flatten()[0]
             self.dataSource_tide = 'IH-DATA'
         except:
                 pass
