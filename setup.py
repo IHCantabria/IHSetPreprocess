@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='IHSetPreprocess',
-    version='0.1.0',
+    version='0.1.1',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -10,12 +10,12 @@ setup(
         'xarray',
         'numba',
         'datetime',
-        'spotpy',
-        'IHSetCalibration @ git+https://github.com/defreitasL/IHSetCalibration.git'
+        'pandas',
+        'IHSetPreprocess @ git+https://github.com/IHCantabria/IHSetPreprocess.git'
     ],
-    author='Changbin Lim',
-    author_email='limcs@unican.es',
-    description='IH-SET Lim et al. (2022)',
+    author='Lucas de Freitas Pereira',
+    author_email='lucas.defreitas@unican.es',
+    description='IH-SET Preprocessing module',
     url='https://github.com/IHCantabria/IHSetPreprocess',
     classifiers=[
         'Development Status :: 3 - Alpha',
