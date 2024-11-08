@@ -54,20 +54,19 @@ class interpolator(object):
         """
         # Interpolate the time dimension
         self.time = self.waves.time
-        time_sl = self.sl.time
-
+        
         if self.sl.surge is not None:
-            self.sl.surge = np.interp(self.time, time_sl, self.sl.surge)
+            self.sl.surge = np.interp(self.time, self.sl.time_surge, self.sl.surge)
         else:
             self.sl.surge = None
         
         if self.sl.tide is not None:
-            self.sl.tide = np.interp(self.time, time_sl, self.sl.tide)
+            self.sl.tide = np.interp(self.time, self.sl.time_tide, self.sl.tide)
         else:
             self.sl.tide = None
         
         if self.sl.slr is not None:
-            self.sl.slr = np.interp(self.time, time_sl, self.sl.slr)
+            self.sl.slr = np.interp(self.time, self.sl.time_slr, self.sl.slr)
         else:
             self.sl.slr = None
         
