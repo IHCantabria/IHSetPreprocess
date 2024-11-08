@@ -27,10 +27,13 @@ class interpolator(object):
         """
         Check the time consistency of the data
         """
-        
-        if self.waves.time == self.sl.time_surge == self.sl.time_tide:
-            self.time = self.waves.time
-            return 'Time is consistent'
+        if len(self.waves.time) == len(self.sl.time_surge) == len(self.sl.time_tide):
+            if np.sum(self.waves.time == self.sl.time_surge == self.sl.time_tide) == len(self.waves.time):
+                self.time = self.waves.time
+                return 'Time is consistent'
+            else:
+                self.interp_time()
+                return 'Interpolating time'
         else:
             self.interp_time()
             return 'Interpolating time'
