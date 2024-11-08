@@ -28,7 +28,7 @@ class interpolator(object):
         Check the time consistency of the data
         """
         
-        if self.waves.time == self.sl.time == self.obs.time:
+        if self.waves.time == self.sl.time_surge == self.sl.time_tide:
             self.time = self.waves.time
             return 'Time is consistent'
         else:
