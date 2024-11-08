@@ -70,7 +70,8 @@ class interpolator(object):
         else:
             self.sl.slr = None
         
-        self.sl.time = self.time
+        self.sl.time_surge = self.time
+        self.sl.time_tide = self.time
     
     def interp_space(self):
         """
