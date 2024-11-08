@@ -61,6 +61,12 @@ class wave_data(object):
         except:
             pass
 
+        # the variables have dimension (time), we need dimensions (time, 1)
+
+        self.hs = self.hs.reshape(-1,1)
+        self.tp = self.tp.reshape(-1,1)
+        self.dir = self.dir.reshape(-1,1)
+
         if self.dataSource == None:
             return 'Wrong data format'
         else:
@@ -181,6 +187,8 @@ class sl_data(object):
         except:
                 pass
         
+        self.surge = self.surge.reshape(-1,1)
+        
         if self.dataSource_surge == None:
             return 'Wrong data format'
         else:
@@ -210,6 +218,8 @@ class sl_data(object):
             self.dataSource_tide = 'CSV file'
         except:
             pass
+
+        self.tide = self.tide.reshape(-1,1)
         
         if self.dataSource_tide == None:
             return 'Wrong data format'
@@ -256,6 +266,8 @@ class obs_data(object):
                 self.dataSource = 'CSV file'
         except:
                 pass
+        
+        self.obs = self.obs.reshape(-1,1)
         
         if self.dataSource == None:
             return 'Wrong data format'

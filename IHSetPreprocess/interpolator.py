@@ -33,6 +33,7 @@ class interpolator(object):
             return 'Time is consistent'
         else:
             self.interp_time()
+            return 'Interpolating time'
     
     def check_dimensions(self):
         """
@@ -103,8 +104,10 @@ class interpolator(object):
         
         self.sl.lat = self.lat
         self.sl.lon
-    
+   
 
+            
+            
 
 
 

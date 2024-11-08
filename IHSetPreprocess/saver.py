@@ -1,5 +1,6 @@
 import xarray as xr
 from datetime import datetime
+import numpy as np
 
 class save_SET_standard_netCDF(object):
     """
@@ -17,6 +18,10 @@ class save_SET_standard_netCDF(object):
         self.ntrs = None
         
         # Variables
+        self.w_dataSource = None
+        self.sl_dataSource_surge = None
+        self.sl_dataSource_tide = None
+        self.obs_dataSource = None
         self.hs = None
         self.tp = None
         self.dir = None
@@ -24,11 +29,25 @@ class save_SET_standard_netCDF(object):
         self.surge = None
         self.slr = None
         
-        
-    
     def add_waves(self, wave_data):
         """ Add wave data to the dataset """
-        self.waves = wave_data
+
+        if self.hs is None:
+            self.hs = wave_data.hs
+            self.tp = wave_data.tp
+            self.dir = wave_data.dir
+            self.lat = wave_data.lat
+            self.lon = wave_data.lon
+            self.time = wave_data.time
+            self.w_dataSource = wave_data.dataSource
+        else:
+            self.hs = np.concatenate((self.hs, wave_data.hs), axis=1)
+            self.tp = np.concatenate((self.tp, wave_data.tp), axis=1)
+            self.dir = np.concatenate((self.dir, wave_data.dir), axis=1)
+            self.lat = np.concatenate((self.lat, wave_data.lat), axis=0)
+            self.lon = np.concatenate((self.lon, wave_data.lon), axis=0)
+            self.w_dataSource = self.w_dataSource+'/'+wave_data.dataSource
+
         
     def add_sl(self, sl_data):
         """ Add sea level data to the dataset """
@@ -42,7 +61,7 @@ class save_SET_standard_netCDF(object):
         """ Set global attributes """
         # Global attributes
 
-        data_sources = f'Waves: {self.waves.dataSource}, Surge: {self.sl.dataSource_surge}, Tide: {self.sl.dataSource_tide}, Obs: {self.obs.dataSource}'
+        data_sources = f'Waves: {self.w_dataSource}, Surge: {self.sl.dataSource_surge}, Tide: {self.sl.dataSource_tide}, Obs: {self.obs.dataSource}'
         
         creation_date = datetime.now().strftime("%Y-%m-%d")
 
@@ -67,17 +86,17 @@ class save_SET_standard_netCDF(object):
         # Create dataset with xarray
         ds = xr.Dataset(
             {
-                "hs": (("time", "ntrs"), self.waves.hs, {
+                "hs": (("time", "ntrs"), self.hs, {
                     "units": "Meters",
                     "standard_name": "wave_significant_height",
                     "long_name": "Wave Significant Height"
                 }),
-                "tp": (("time", "ntrs"), self.waves.tp, {
+                "tp": (("time", "ntrs"), self.tp, {
                     "units": "Seconds",
                     "standard_name": "wave_peak_period",
                     "long_name": "Wave Peak Period"
                 }),
-                "dir": ("time", self.waves.dir, {
+                "dir": ("time", self.dir, {
                     "units": "Degrees North",
                     "standard_name": "wave_direction",
                     "long_name": "Wave Direction of Propagation"
@@ -99,18 +118,18 @@ class save_SET_standard_netCDF(object):
                 # })
             },
             coords={
-                "time": ("time", self.waves.time, {
+                "time": ("time", self.time, {
                     "units": "days since 2000-01-01",
                     "standard_name": "time",
                     "long_name": "Time",
                     "calendar": "gregorian"
                 }),
-                "lat": ("lat", self.waves.lat, {
+                "lat": ("lat", self.lat, {
                     "units": "degrees_north",
                     "standard_name": "latitude",
                     "long_name": "Latitude"
                 }),
-                "lon": ("lon", self.waves.lon, {
+                "lon": ("lon", self.lon, {
                     "units": "degrees_east",
                     "standard_name": "longitude",
                     "long_name": "Longitude"
