@@ -96,17 +96,17 @@ class save_SET_standard_netCDF(object):
                     "standard_name": "wave_peak_period",
                     "long_name": "Wave Peak Period"
                 }),
-                "dir": ("time", self.dir, {
+                "dir": (("time", "ntrs"), self.dir, {
                     "units": "Degrees North",
                     "standard_name": "wave_direction",
                     "long_name": "Wave Direction of Propagation"
                 }),
-                "tide": ("time", self.sl.tide, {
+                "tide": (("time", "ntrs"), self.sl.tide, {
                     "units": "Meters",
                     "standard_name": "astronomical_tide",
                     "long_name": "Astronomical Tide"
                 }),
-                "surge": ("time", self.sl.surge, {
+                "surge": (("time", "ntrs"), self.sl.surge, {
                     "units": "Meters",
                     "standard_name": "storm_surge",
                     "long_name": "Storm Surge"
@@ -119,10 +119,8 @@ class save_SET_standard_netCDF(object):
             },
             coords={
                 "time": ("time", self.time, {
-                    "units": "days since 2000-01-01",
                     "standard_name": "time",
-                    "long_name": "Time",
-                    "calendar": "gregorian"
+                    "long_name": "Time"
                 }),
                 "lat": ("lat", self.lat, {
                     "units": "degrees_north",
