@@ -63,21 +63,21 @@ class interpolator(object):
         if self.sl.surge is not None:
             #we need the time in float to perform the interpolation
             t_float_s = timerr(self.sl.time_surge)
-            self.sl.surge = np.interp(t_float, self.sl.time_surge, t_float_s)
+            self.sl.surge = np.interp(t_float, t_float_s, self.sl.surge)
         else:
             self.sl.time_surge = self.time
             self.sl.surge = np.zeros_like(self.waves.hs)
         
         if self.sl.tide is not None:
             t_float_t = timerr(self.sl.time_tide)
-            self.sl.tide = np.interp(t_float, self.sl.time_tide, t_float_t)
+            self.sl.tide = np.interp(t_float, t_float_t, t_float_t)
         else:
             self.sl.time_tide = self.time
             self.sl.tide = np.zeros_like(self.waves.hs)
         
         if self.sl.slr is not None:
             t_float_slr = timerr(self.sl.time_slr)
-            self.sl.slr = np.interp(t_float, self.sl.time_slr, t_float_slr)
+            self.sl.slr = np.interp(t_float, t_float_slr, self.sl.slr)
         else:
             self.sl.time_slr = self.time
             self.sl.slr = np.zeros_like(self.waves.hs)
