@@ -57,21 +57,30 @@ class interpolator(object):
         """
         # Interpolate the time dimension
         self.time = self.waves.time
-        
+
+        timerr = np.vectorize(lambda x: x.timestamp())
+        t_float = timerr(self.time)
         if self.sl.surge is not None:
-            self.sl.surge = np.interp(self.time, self.sl.time_surge, self.sl.surge)
+            #we need the time in float to perform the interpolation
+            t_float_s = timerr(self.sl.time_surge)
+            self.sl.surge = np.interp(t_float, self.sl.time_surge, t_float_s)
         else:
-            self.sl.surge = None
+            self.sl.time_surge = self.time
+            self.sl.surge = np.zeros_like(self.waves.hs)
         
         if self.sl.tide is not None:
-            self.sl.tide = np.interp(self.time, self.sl.time_tide, self.sl.tide)
+            t_float_t = timerr(self.sl.time_tide)
+            self.sl.tide = np.interp(t_float, self.sl.time_tide, t_float_t)
         else:
-            self.sl.tide = None
+            self.sl.time_tide = self.time
+            self.sl.tide = np.zeros_like(self.waves.hs)
         
         if self.sl.slr is not None:
-            self.sl.slr = np.interp(self.time, self.sl.time_slr, self.sl.slr)
+            t_float_slr = timerr(self.sl.time_slr)
+            self.sl.slr = np.interp(t_float, self.sl.time_slr, t_float_slr)
         else:
-            self.sl.slr = None
+            self.sl.time_slr = self.time
+            self.sl.slr = np.zeros_like(self.waves.hs)
         
         self.sl.time_surge = self.time
         self.sl.time_tide = self.time
