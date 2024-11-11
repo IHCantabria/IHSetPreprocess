@@ -65,7 +65,7 @@ class save_SET_standard_netCDF(object):
         
         creation_date = datetime.now().strftime("%Y-%m-%d")
 
-        self.cheack_models()
+        self.check_models()
 
         self.attrs = {
             "title": "Input File for IH-SET models",
