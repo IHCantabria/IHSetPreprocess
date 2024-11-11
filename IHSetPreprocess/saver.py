@@ -56,15 +56,31 @@ class save_SET_standard_netCDF(object):
         
     def add_obs(self, obs_data):
         """ Add observation data to the dataset """
-        self.obs = obs_data
+        
+        if obs_data.dataSource == 'CoastSat':
+            self.obs = obs_data.obs
+            self.time = obs_data.time_obs
+            self.ntrs = obs_data.ntrs
+            self.obs_dataSource = obs_data.dataSource
+        else:
+            if self.obs is None:
+                self.obs = obs_data.obs
+                self.time = obs_data.time_obs
+                self.ntrs = np.array([1])
+                self.obs_dataSource = obs_data.dataSource
+            else:
+                self.obs = np.concatenate((self.obs, obs_data.obs), axis=1)
+                self.ntrs = np.concatenate((self.ntrs, [self.ntrs[-1]+1]), axis=0)
+                self.obs_dataSource = self.obs_dataSource+'/'+obs_data.dataSource
 
     def set_attrs(self, **kwargs):
         """ Set global attributes """
         # Global attributes
 
         data_sources = f'Waves: {self.w_dataSource}, Surge: {self.sl.dataSource_surge}, Tide: {self.sl.dataSource_tide}, Obs: {self.obs.dataSource}'
-        
-        creation_date = datetime.now().strftime("%Y-%m-%d")
+
+        # Lets use the date with YYY-MM-DDThh:mm:ssZ format        
+        creation_date = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
 
         self.check_models()
 

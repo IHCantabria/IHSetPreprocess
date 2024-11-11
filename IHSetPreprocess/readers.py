@@ -5,6 +5,7 @@ import pandas as pd
 # from windrose import WindroseAxes
 # import seaborn as sns
 import numpy as np
+import geopandas as gpd
 
 
 class wave_data(object):
@@ -252,7 +253,8 @@ class obs_data(object):
         self.dataSource = None
         self.time_obs = None
         self.obs = None
-        self.ntrs = np.array([1])
+        # self.ntrs = np.array([1])
+        self.ntrs = None
         
     def readObs(self, path):
         """
@@ -260,15 +262,28 @@ class obs_data(object):
         """
         self.filePath = path
         try:
-                data = pd.read_csv(self.filePath)
-                Time = data['Datetime'].values
-                self.time_obs = pd.to_datetime(Time)
-                self.obs = data['Obs']
-                self.dataSource = 'CSV file'
+            data = pd.read_csv(self.filePath)
+            Time = data['Datetime'].values
+            self.time_obs = pd.to_datetime(Time)
+            self.obs = data['Obs']
+            self.dataSource = 'CSV file'
+            self.obs = self.obs.reshape(-1,1)
         except:
                 pass
         
-        self.obs = self.obs.reshape(-1,1)
+        try:
+            geo_data = gpd.read_file(self.filePath)
+            coords = geo_data['geometry'].apply(lambda geom: [point.coords[:][0] for point in geom.geoms])
+            self.time_obs = pd.to_datetime(geo_data['time'])
+            x = {}
+            y = {}
+            for i in range(len(coords)):
+                x[i] = [coords[i][j][0] for j in range(len(coords[i]))]
+                y[i] = [coords[i][j][1] for j in range(len(coords[i]))]
+            self.obs = pd.DataFrame(data={'x': x, 'y': y})
+            self.dataSource = 'CoastSat'
+        except:
+                pass
         
         if self.dataSource == None:
             return 'Wrong data format'
