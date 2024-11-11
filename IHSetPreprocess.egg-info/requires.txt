@@ -3,3 +3,5 @@ xarray
 numba
 datetime
 pandas
+json
+IHSetPreprocess@ git+https://github.com/IHCantabria/IHSetPreprocess.git

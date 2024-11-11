@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='IHSetPreprocess',
-    version='0.2.18',
+    version='0.2.19',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -10,7 +10,9 @@ setup(
         'xarray',
         'numba',
         'datetime',
-        'pandas'
+        'pandas',
+        'json',
+        'IHSetPreprocess @ git+https://github.com/IHCantabria/IHSetPreprocess.git'
     ],
     author='Lucas de Freitas Pereira',
     author_email='lucas.defreitas@unican.es',
