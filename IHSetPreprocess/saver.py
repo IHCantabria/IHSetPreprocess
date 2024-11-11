@@ -1,6 +1,7 @@
 import xarray as xr
 from datetime import datetime
 import numpy as np
+import json
 
 class save_SET_standard_netCDF(object):
     """
@@ -65,8 +66,6 @@ class save_SET_standard_netCDF(object):
         
         creation_date = datetime.now().strftime("%Y-%m-%d")
 
-        self.check_models()
-
         self.attrs = {
             "title": "Input File for IH-SET models",
             "institution": "Environmental Hydraulics Institute of Cantabria - https://ihcantabria.com/",
@@ -87,6 +86,9 @@ class save_SET_standard_netCDF(object):
     def export_netcdf(self, filepath, **kwargs):
         """ Export the dataset to a NetCDF file using xarray """
         # Create dataset with xarray
+        
+        self.check_models()
+
         ds = xr.Dataset(
             {
                 "hs": (("time", "ntrs"), self.hs, {
@@ -114,11 +116,11 @@ class save_SET_standard_netCDF(object):
                     "standard_name": "storm_surge",
                     "long_name": "Storm Surge"
                 }),
-                # "slr": ("time", self.sl.slr, {
-                #     "units": "Meters",
-                #     "standard_name": "sea_level_rise",
-                #     "long_name": "Sea Level Rise"
-                # })
+                "slr": ("time", self.sl.slr, {
+                    "units": "Meters",
+                    "standard_name": "sea_level_rise",
+                    "long_name": "Sea Level Rise"
+                })
             },
             coords={
                 "time": ("time", self.time, {
@@ -178,8 +180,8 @@ class save_SET_standard_netCDF(object):
             models['MOOSE'] = True
             models['M&D'] = True
             models['Turki'] = True
-
-        self.applicable_models = models
-
+        
+        models_json = json.dumps(self.models)
+        self.applicable_models = models_json
 
 

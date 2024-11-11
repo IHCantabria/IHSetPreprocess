@@ -157,6 +157,7 @@ class sl_data(object):
         self.surge = None
         self.time_tide = None
         self.time_surge = None
+        self.time_slr = None
         self.lat_tide = None
         self.lon_tide = None
         self.lat_surge = None
