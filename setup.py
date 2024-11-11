@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='IHSetPreprocess',
-    version='0.2.15',
+    version='0.2.16',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -10,8 +10,7 @@ setup(
         'xarray',
         'numba',
         'datetime',
-        'pandas',
-        'json'
+        'pandas'
     ],
     author='Lucas de Freitas Pereira',
     author_email='lucas.defreitas@unican.es',

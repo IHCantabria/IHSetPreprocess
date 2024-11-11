@@ -3,4 +3,3 @@ xarray
 numba
 datetime
 pandas
-json
