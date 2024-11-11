@@ -282,7 +282,8 @@ class obs_data(object):
                 y[i] = [coords[i][j][1] for j in range(len(coords[i]))]
             self.obs = pd.DataFrame(data={'x': x, 'y': y})
             self.dataSource = 'CoastSat'
-        except:
+        except Exception as e:
+                print(e)
                 pass
         
         if self.dataSource == None:
