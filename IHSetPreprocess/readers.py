@@ -274,7 +274,7 @@ class obs_data(object):
         try:
             geo_data = gpd.read_file(self.filePath)
             coords = geo_data['geometry'].apply(lambda geom: [point.coords[:][0] for point in geom.geoms])
-            self.time_obs = pd.to_datetime(geo_data['time'])
+            self.time_obs = pd.to_datetime(geo_data['date'])
             x = {}
             y = {}
             for i in range(len(coords)):
