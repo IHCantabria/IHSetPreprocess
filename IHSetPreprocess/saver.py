@@ -65,11 +65,13 @@ class save_SET_standard_netCDF(object):
         
         creation_date = datetime.now().strftime("%Y-%m-%d")
 
+        self.cheack_models()
+
         self.attrs = {
             "title": "Input File for IH-SET models",
             "institution": "Environmental Hydraulics Institute of Cantabria - https://ihcantabria.com/",
             "source": "IH-SET preprocessing module",
-            "history": f'Created on {creation_date}.',
+            "history": f'Created on {creation_date}',
             "references": "Jaramillo et al. (2025) - doi: xxxxxxxx.xx",
             "Documentation": "https://ihcantabria.github.io/IHSetDocs/",
             "Conventions": "CF-1.6",
@@ -78,7 +80,8 @@ class save_SET_standard_netCDF(object):
             "geospatial_lat_min": -90,
             "geospatial_lat_max": 90,
             "geospatial_lon_min": -180,
-            "geospatial_lon_max": 180
+            "geospatial_lon_max": 180,
+            "applicable_models": self.applicable_models
         }
 
     def export_netcdf(self, filepath, **kwargs):
@@ -144,5 +147,39 @@ class save_SET_standard_netCDF(object):
         # Export to NetCDF
         ds.to_netcdf(filepath, engine="netcdf4")
         print(f"File {filepath} saved correctly.")
+
+    def check_models(self):
+        """
+        Check wich model is applicable with the provided data
+        """
+        models = {'M&D':False,
+                  'Y09':False, 
+                  'SF':False, 
+                  'JA20':False, 
+                  'Lim':False, 
+                  'Jara':False, 
+                  'Turki':False, 
+                  'JA21':False, 
+                  'H&K':False,
+                  'MOOSE':False}
+        
+        if self.hs is not None:
+            models['Y09'] = True
+            models['JA20'] = True
+            models['Lim'] = True
+            models['Jara'] = True
+        
+        if self.hs is not None and self.tp is not None:
+            models['SF'] = True
+
+        if self.hs is not None and self.tp is not None and self.dir is not None:
+            models['JA21'] = True
+            models['H&K'] = True
+            models['MOOSE'] = True
+            models['M&D'] = True
+            models['Turki'] = True
+
+        self.applicable_models = models
+
 
 
