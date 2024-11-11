@@ -66,6 +66,8 @@ class save_SET_standard_netCDF(object):
         
         creation_date = datetime.now().strftime("%Y-%m-%d")
 
+        self.check_models()
+
         self.attrs = {
             "title": "Input File for IH-SET models",
             "institution": "Environmental Hydraulics Institute of Cantabria - https://ihcantabria.com/",
@@ -87,8 +89,6 @@ class save_SET_standard_netCDF(object):
         """ Export the dataset to a NetCDF file using xarray """
         # Create dataset with xarray
         
-        self.check_models()
-
         ds = xr.Dataset(
             {
                 "hs": (("time", "ntrs"), self.hs, {
