@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='IHSetPreprocess',
-    version='0.2.14',
+    version='0.2.15',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
@@ -11,7 +11,7 @@ setup(
         'numba',
         'datetime',
         'pandas',
-        'IHSetPreprocess @ git+https://github.com/IHCantabria/IHSetPreprocess.git'
+        'json'
     ],
     author='Lucas de Freitas Pereira',
     author_email='lucas.defreitas@unican.es',

@@ -181,7 +181,7 @@ class save_SET_standard_netCDF(object):
             models['M&D'] = True
             models['Turki'] = True
         
-        models_json = json.dumps(self.models)
+        models_json = json.dumps(models)
         self.applicable_models = models_json
 
 
