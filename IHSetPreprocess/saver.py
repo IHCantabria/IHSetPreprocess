@@ -116,7 +116,7 @@ class save_SET_standard_netCDF(object):
                     "standard_name": "storm_surge",
                     "long_name": "Storm Surge"
                 }),
-                "slr": ("time", self.sl.slr, {
+                "slr": (("time", "ntrs"), self.sl.slr, {
                     "units": "Meters",
                     "standard_name": "sea_level_rise",
                     "long_name": "Sea Level Rise"

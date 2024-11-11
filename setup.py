@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='IHSetPreprocess',
-    version='0.2.16',
+    version='0.2.17',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
