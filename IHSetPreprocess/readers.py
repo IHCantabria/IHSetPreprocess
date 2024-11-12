@@ -278,8 +278,8 @@ class obs_data(object):
             shores = {}
             for i in range(len(coords)):
                 shores[str(i)] = {}
-                shores[str(i)]['x'] = [coords[i][j][0] for j in range(len(coords[i]))]
-                shores[str(i)]['y'] = [coords[i][j][1] for j in range(len(coords[i]))]
+                shores[str(i)]['x'] = np.array([coords[i][j][0] for j in range(len(coords[i]))])
+                shores[str(i)]['y'] = np.array([coords[i][j][1] for j in range(len(coords[i]))])
             self.shores = shores
             self.dataSource = 'CoastSat'
         except Exception as e:
