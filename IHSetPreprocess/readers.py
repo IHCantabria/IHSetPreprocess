@@ -275,12 +275,10 @@ class obs_data(object):
             geo_data = gpd.read_file(self.filePath)
             coords = geo_data['geometry'].apply(lambda geom: [point.coords[:][0] for point in geom.geoms])
             self.time_obs = pd.to_datetime(geo_data['date'])
-            x = {}
-            y = {}
+            shores = {}
             for i in range(len(coords)):
-                x[i] = [coords[i][j][0] for j in range(len(coords[i]))]
-                y[i] = [coords[i][j][1] for j in range(len(coords[i]))]
-            self.obs = pd.DataFrame(data={'x': x, 'y': y})
+                shores[str(i)]['x'] = [coords[i][j][0] for j in range(len(coords[i]))]
+                shores[str(i)]['y'] = [coords[i][j][1] for j in range(len(coords[i]))]
             self.dataSource = 'CoastSat'
         except Exception as e:
                 print(e)
