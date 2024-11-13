@@ -314,6 +314,9 @@ class obs_data(object):
             self.intersections = intersections
             self.xi = domain.trs.xi
             self.yi = domain.trs.yi
+            self.xf = domain.trs.xf
+            self.yf = domain.trs.yf
+            self.phi = domain.trs.phi
 
 
 def find_intersections2(obs_shores, transects, gap_threshold=100):
