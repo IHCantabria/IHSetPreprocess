@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import LineString, Point
-from CoastSat_handler import shoreline
+from .CoastSat_handler import shoreline
 
 class wave_data(object):
     """
@@ -314,7 +314,7 @@ class obs_data(object):
             self.intersections = intersections
             self.xi = domain.trs.xi
             self.yi = domain.trs.yi
-            
+
 
 def find_intersections2(obs_shores, transects, gap_threshold=100):
     results = {}
