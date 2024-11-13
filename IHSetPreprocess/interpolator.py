@@ -43,7 +43,7 @@ class interpolator(object):
         Check the space consistency of the data
         """
         
-        if self.waves.lat == self.sl.lat == self.obs.lat and self.waves.lon == self.sl.lon == self.obs.lon:
+        if self.waves.lat == self.obs.lat and self.waves.lon == self.sl.lon == self.obs.lon:
             self.lat = self.waves.lat
             self.lon = self.waves.lon
             return 'Space is consistent'

@@ -6,7 +6,8 @@ import pandas as pd
 # import seaborn as sns
 import numpy as np
 import geopandas as gpd
-
+from shapely.geometry import LineString, Point
+from CoastSat_handler import shoreline
 
 class wave_data(object):
     """
@@ -290,4 +291,126 @@ class obs_data(object):
             return 'Wrong data format'
         else:
             return 'Data loaded correctly'
+    
+    def CoastSatR(self, epsg, sea_point, ref_points, dx, length=500):
+         '''
+         This function extract timeseries from CoastSat geojson MULTIPOINT output.
+         '''
 
+         if self.dataSource == 'CoastSat':
+            domain = shoreline(self.shores, self.time_obs, epsg = epsg)
+            domain.setDomain(sea_point, 'draw', dx, refPoints=ref_points)
+            domain.setTransects(length)
+
+            transects = []
+            for i in range(len(domain.trs.xi)):
+                transects.append({'xi': domain.trs.xi[i], 'yi': domain.trs.yi[i], 'xf': domain.trs.xf[i], 'yf': domain.trs.yf[i]})
+            
+            dists = find_intersections(self.shores, transects)
+            intersections = find_intersections2(self.shores, transects)
+
+            self.obs = dists
+            self.ntrs = len(transects)
+            self.intersections = intersections
+            self.xi = domain.trs.xi
+            self.yi = domain.trs.yi
+            
+
+def find_intersections2(obs_shores, transects, gap_threshold=100):
+    results = {}
+    
+    for time_key, shore_data in obs_shores.items():
+        # Dividir a linha da costa em segmentos
+        segments = split_segments(shore_data['x'], shore_data['y'], gap_threshold)
+        
+        transect_results = []
+
+        for transect in transects:
+            transect_line = LineString([(transect['xi'], transect['yi']), (transect['xf'], transect['yf'])])
+            intersection_found = False
+
+            # Iterar sobre cada segmento e verificar a interseção
+            for segment in segments:
+                intersection = segment.intersection(transect_line)
+
+                if not intersection.is_empty:
+                    intersection_found = True
+                    # Se houver interseção, extrair as coordenadas do ponto de interseção
+                    if isinstance(intersection, Point):
+                        transect_results.append((intersection.x, intersection.y))
+                    elif isinstance(intersection, LineString):
+                        # Caso seja uma linha (não um ponto), extrair a coordenada média (pode ser ajustado conforme necessário)
+                        coords = list(intersection.coords)
+                        mean_x = np.mean([coord[0] for coord in coords])
+                        mean_y = np.mean([coord[1] for coord in coords])
+                        transect_results.append((mean_x, mean_y))
+                    break
+
+            # Se nenhum segmento interceptar o transecto, registrar NaN
+            if not intersection_found:
+                transect_results.append(np.nan)
+
+        results[time_key] = transect_results
+
+    return results
+
+def split_segments(x, y, gap_threshold=100):
+    segments = []
+    current_segment = [(x[0], y[0])]
+
+    for i in range(1, len(x)):
+        dist = np.sqrt((x[i] - x[i-1])**2 + (y[i] - y[i-1])**2)
+        if dist > gap_threshold:
+            segments.append(LineString(current_segment))
+            current_segment = [(x[i], y[i])]
+        else:
+            current_segment.append((x[i], y[i]))
+
+    if current_segment:
+        segments.append(LineString(current_segment))
+
+    return segments
+
+# Função para calcular as interseções e gerar a matriz de saída
+def find_intersections(obs_shores, transects, gap_threshold=100):
+    # Número de tempos e transectos
+    num_times = len(obs_shores)
+    num_transects = len(transects)
+
+    # Inicializando a matriz de resultados como NaN
+    results = np.full((num_times, num_transects), np.nan)
+
+    # Iterar sobre as keys do dicionário em ordem crescente
+    for time_key in sorted(obs_shores.keys(), key=int):
+        time_idx = int(time_key)  # Índice correspondente ao tempo
+        shore_data = obs_shores[time_key]
+
+        # Dividir a linha da costa em segmentos
+        segments = split_segments(shore_data['x'], shore_data['y'], gap_threshold)
+        
+        for transect_idx, transect in enumerate(transects):
+            transect_line = LineString([(transect['xi'], transect['yi']), (transect['xf'], transect['yf'])])
+            intersection_found = False
+
+            # Iterar sobre cada segmento e verificar a interseção
+            for segment in segments:
+                intersection = segment.intersection(transect_line)
+
+                if not intersection.is_empty:
+                    intersection_found = True
+                    # Se houver interseção, calcular a posição ao longo do transecto
+                    if isinstance(intersection, Point):
+                        intersect_point = intersection
+                    elif isinstance(intersection, LineString):
+                        # Caso seja uma linha (não um ponto), considerar o ponto médio da linha de interseção
+                        coords = list(intersection.coords)
+                        mean_x = np.mean([coord[0] for coord in coords])
+                        mean_y = np.mean([coord[1] for coord in coords])
+                        intersect_point = Point(mean_x, mean_y)
+
+                    # Calcular a posição ao longo do transecto em relação à origem
+                    dist_along_transect = transect_line.project(intersect_point)
+                    results[time_idx, transect_idx] = dist_along_transect
+                    break
+
+    return results

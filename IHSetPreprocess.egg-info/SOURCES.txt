@@ -1,5 +1,6 @@
 README.md
 setup.py
+IHSetPreprocess/CoastSat_handler.py
 IHSetPreprocess/__init__.py
 IHSetPreprocess/interpolator.py
 IHSetPreprocess/readers.py
