@@ -4,6 +4,7 @@ import numpy as np
 import json
 from .interpolator import interpolator
 from scipy.stats import circmean, circstd
+from pyproj import CRS, Transformer
 
 class save_SET_standard_netCDF(object):
     """
@@ -135,6 +136,13 @@ class save_SET_standard_netCDF(object):
 
     def export_netcdf(self, filepath):
         """ Export the dataset to a NetCDF file using xarray """
+
+        if self.waves_epsg != 4326:
+            crs_from = CRS.from_epsg(self.waves_epsg)
+            crs_to = CRS.from_epsg(4326)
+            transformer = Transformer.from_crs(crs_from, crs_to)
+            self.lon_w, self.lat_w = transformer.transform(self.lon_w, self.lat_w)
+
         # Calcular estatísticas para cada variável
         hs_attrs = {
             "units": "Meters",
