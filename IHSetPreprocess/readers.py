@@ -365,6 +365,29 @@ class obs_data(object):
             self.phi = domain.trs.phi
             self.epsg = domain.epsg
             # print(f"flag_f: {domain.flag_f}")
+        
+    def calculate_rotation(X0, Y0, phi, dist):
+        """
+        Calculate the shoreline rotation.
+        """
+
+        phi = np.deg2rad(phi)
+
+        mean_shoreline = np.nanmean(dist, axis=0)
+
+        detrended_dist = np.zeros(dist.shape)
+
+        for i in range(dist.shape[1]):
+            detrended_dist[:, i] = dist[:, i] - mean_shoreline[i]
+
+        alpha = np.zeros(dist.shape[0])
+        
+        for i in range(dist.shape[0]):
+            XN, YN = X0 + detrended_dist[i, :] * np.cos(phi), Y0 + detrended_dist[i, :] * np.sin(phi)
+            fitter = np.polyfit(XN, YN, 1)
+            alpha[i] = 90 - np.rad2deg(np.arctan(fitter[0]))
+
+        alpha[alpha < 0] += 360
 
 
 

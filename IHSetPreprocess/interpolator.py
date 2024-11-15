@@ -176,6 +176,7 @@ class interpolator(object):
         self.tide = fill_nan(self.tide)
         self.surge = fill_nan(self.surge)
         self.slr = fill_nan(self.slr)
+        
 
 def fill_nan(var):
     """

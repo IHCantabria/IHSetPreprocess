@@ -6,6 +6,8 @@ from .interpolator import interpolator
 from scipy.stats import circmean, circstd
 from pyproj import CRS, Transformer
 
+
+
 class save_SET_standard_netCDF(object):
     """
     save_SET_standard_netCDF
@@ -49,6 +51,11 @@ class save_SET_standard_netCDF(object):
         self.applicable_models = None
         self.waves_epsg = None
         self.mask_nan_obs = None
+        self.rot = None
+        self.mask_nan_rot = None
+        self.x_pivotal = None
+        self.y_pivotal = None
+        self.phi_pivotal = None
 
         
     def add_waves(self, wave_data):
@@ -150,6 +157,7 @@ class save_SET_standard_netCDF(object):
             "long_name": "Wave Significant Height",
             "max_value": np.nanmax(self.hs),
             "min_value": np.nanmin(self.hs),
+            "mean_value": np.nanmean(self.hs),
             "standard_deviation": np.nanstd(self.hs)
         }
         tp_attrs = {
@@ -158,12 +166,15 @@ class save_SET_standard_netCDF(object):
             "long_name": "Wave Peak Period",
             "max_value": np.nanmax(self.tp),
             "min_value": np.nanmin(self.tp),
+            "mean_value": np.nanmean(self.tp),
             "standard_deviation": np.nanstd(self.tp)
         }
         dir_attrs = {
             "units": "Degrees North",
             "standard_name": "wave_direction",
             "long_name": "Wave Direction of Propagation",
+            "max_value": np.nanmax(self.dir),
+            "min_value": np.nanmin(self.dir),
             "circular_mean": circmean(self.dir, high=360, low=0, nan_policy='omit'),
             "circular_standard_deviation": circstd(self.dir, high=360, low=0, nan_policy='omit')
         }
@@ -173,6 +184,7 @@ class save_SET_standard_netCDF(object):
             "long_name": "Astronomical Tide",
             "max_value": np.nanmax(self.tide),
             "min_value": np.nanmin(self.tide),
+            "mean_value": np.nanmean(self.tide),
             "standard_deviation": np.nanstd(self.tide)
         }
         surge_attrs = {
@@ -181,6 +193,7 @@ class save_SET_standard_netCDF(object):
             "long_name": "Storm Surge",
             "max_value": np.nanmax(self.surge),
             "min_value": np.nanmin(self.surge),
+            "mean_value": np.nanmean(self.surge),
             "standard_deviation": np.nanstd(self.surge)
         }
         slr_attrs = {
@@ -189,6 +202,7 @@ class save_SET_standard_netCDF(object):
             "long_name": "Sea Level Rise",
             "max_value": np.nanmax(self.slr),
             "min_value": np.nanmin(self.slr),
+            "mean_value": np.nanmean(self.slr),
             "standard_deviation": np.nanstd(self.slr)
         }
         obs_attrs = {
@@ -197,7 +211,17 @@ class save_SET_standard_netCDF(object):
             "long_name": "Shoreline Position",
             "max_value": np.nanmax(self.obs),
             "min_value": np.nanmin(self.obs),
+            "mean_value": np.nanmean(self.obs),
             "standard_deviation": np.nanstd(self.obs)
+        }
+        rot_attrs = {
+            "units": "Degrees",
+            "standard_name": "shoreline_rotation",
+            "long_name": "Shoreline Rotation",
+            "max_value": np.nanmax(self.rot),
+            "min_value": np.nanmin(self.rot),
+            "mean_value": circmean(self.rot),
+            "standard_deviation": circstd(self.rot)
         }
 
         # Create dataset with xarray
@@ -210,6 +234,7 @@ class save_SET_standard_netCDF(object):
                 "surge": (("time", "ntrs"), self.surge, surge_attrs),
                 "slr": (("time", "ntrs"), self.slr, slr_attrs),
                 "obs": (("time_obs", "ntrs"), self.obs, obs_attrs),
+                "rot": ("time_obs", self.rot, rot_attrs),
                 "mask_nan_obs": (("time_obs", "ntrs"), self.mask_nan_obs, {
                     "units": "Boolean",
                     "standard_name": "mask_nan_obs",
@@ -274,7 +299,22 @@ class save_SET_standard_netCDF(object):
                     "units": "degrees_east",
                     "standard_name": "longitude_waves",
                     "long_name": "Longitude of provided waves"
-                })
+                }),
+                "x_pivotal": ("x_pivotal", self.x_pivotal, {
+                    "units": "meters",
+                    "standard_name": "x_pivotal",
+                    "long_name": "Initial x coordinate of pivotal transect"
+                }),
+                "y_pivotal": ("y_pivotal", self.y_pivotal, {
+                    "units": "meters",
+                    "standard_name": "y_pivotal",
+                    "long_name": "Initial y coordinate of pivotal transect"
+                }),
+                "phi_pivotal": ("phi_pivotal", self.phi_pivotal, {
+                    "units": "degrees",
+                    "standard_name": "phi_pivotal",
+                    "long_name": "Angle of pivotal transect"
+                }),
             },
             attrs=self.attrs
         )
@@ -331,19 +371,161 @@ class save_SET_standard_netCDF(object):
         interp.check_times()
         interp. check_dimensions()
 
+        if self.ntrs > 1:
+            self.rot, self.mask_nan_rot = calculate_rotation(self.xi, self.yi, self.phi, self.obs)
+            pivotal = find_pivotal_point(self.obs, self.xi, self.yi, self.phi)
+            if pivotal is not None:
+                self.x_pivotal =[ pivotal['xi']]
+                self.y_pivotal = [pivotal['yi']]
+                self.phi_pivotal = [pivotal['phi']]
+                # print(f"Pivotal point found at ({self.x_pivotal}, {self.y_pivotal}) with angle {self.phi_pivotal}")
+            else:
+                self.x_pivotal = [None]
+                self.y_pivotal = [None]
+                self.phi_pivotal = [None]
+        else:
+            self.rot = np.zeros_like(self.obs)
+            self.mask_nan_obs = interp.mask_nan_obs
+            self.x_pivotal = [None]
+            self.y_pivotal = [None]
+            self.phi_pivotal = [None]
+
+
         self.hs = interp.hs
         self.tp = interp.tp
         self.dir = interp.dir
         self.tide = interp.tide
         self.surge = interp.surge
         self.slr = interp.slr
-        self.obs = interp.obs
         self.time = interp.time
         self.lat = interp.lat
         self.lon = interp.lon
         self.mask_nan_obs = interp.mask_nan_obs
 
-        
 
+def calculate_rotation(X0, Y0, phi, dist):
+    """
+    Calculate the shoreline rotation.
+    """
 
+    phi_rad = np.deg2rad(phi)
+
+    mean_shoreline = np.nanmean(dist, axis=0)
+
+    detrended_dist = np.zeros(dist.shape)
+
+    for i in range(dist.shape[1]):
+        detrended_dist[:, i] = dist[:, i] - mean_shoreline[i]
+
+    # We will calculate the rotation only for the times where we at least 80% of the data
+
+    nans_rot = np.sum(np.isnan(detrended_dist), axis=1) > 0.2 * dist.shape[1]
+    
+    alpha = np.zeros(dist.shape[0]) * np.nan
+    
+    for i in range(dist.shape[0]):
+        if not nans_rot[i]:
+            XN, YN = X0 + detrended_dist[i, :] * np.cos(phi_rad), Y0 + detrended_dist[i, :] * np.sin(phi_rad)
+            ii_nan = np.isnan(XN) | np.isnan(YN)
+            fitter = np.polyfit(XN[~ii_nan], YN[~ii_nan], 1)
+            alpha[i] = 90 - np.rad2deg(np.arctan(fitter[0]))
+            if alpha[i] < 0:
+                alpha[i] += 360
+
+    mask_nans = np.isnan(alpha)
+
+    # mean_alpha_ori = circmean(alpha[~mask_nans], high=360, low=0)
+    # if mean_alpha_ori<0:
+    #     mean_alpha_ori += 360
+
+    mean_phi = 90 - circmean(phi, high=360, low=0)
+    if mean_phi<0:
+        mean_phi += 360
+    mean_alpha = circmean(alpha[~mask_nans], high=360, low=0) + 90
+    if mean_alpha<0:
+        mean_alpha += 360   
+    mean_alpha_2 = circmean(alpha[~mask_nans], high=360, low=0) - 90
+    if mean_alpha_2<0:
+        mean_alpha_2 += 360
+
+    # print(f"Mean alpha: {mean_alpha}, Mean phi: {mean_phi}, Mean alpha 2: {mean_alpha_2}, Mean Alpha_ori: {mean_alpha_ori}")
+
+    if np.abs(mean_alpha - mean_phi) <= np.abs(mean_alpha_2 - mean_phi) :
+        alpha  += 90
+    else:
+        alpha -= 90
+    
+    # Now we change the <0 to 0-360
+
+    alpha[alpha < 0] += 360
+
+    return alpha, nans_rot
+
+from sklearn.decomposition import PCA
+# import matplotlib.pyplot as plt
+def find_pivotal_point(obs, xi, yi, phi):
+    """
+    Find the pivotal point of the shoreline
+    """
+    # Interpolação para lidar com valores NaN em obs
+    Obs_interp = np.zeros_like(obs)
+    for i in range(obs.shape[1]):
+        Obs_interp[:, i] = np.interp(
+            np.arange(len(obs)),
+            np.flatnonzero(~np.isnan(obs[:, i])),
+            obs[~np.isnan(obs[:, i]), i]
+        )
+    
+    # Aplicando PCA
+    pca = PCA(n_components=obs.shape[1])
+    pca.fit(Obs_interp)
+    u = pca.components_.T
+
+    # Calculando a distância ao longo da linha xi, yi
+    d = np.sqrt((xi - xi[0]) ** 2 + (yi - yi[0]) ** 2)
+
+    # Encontrando a interseção entre o 1º e 2º modos
+    # Calculando a diferença entre os dois modos
+    diff = u[:, 0] - u[:, 1]
+
+    # Procurando as mudanças de sinal, que indicam pontos de interseção
+    sign_changes = np.where(np.diff(np.sign(diff)))[0]
+
+    if len(sign_changes) == 0:
+        print("Nenhuma interseção encontrada entre os dois primeiros modos.")
+        return None
+
+    # Pega o primeiro ponto de interseção encontrado
+    idx = sign_changes[0]
+
+    # Interpolação linear para encontrar a posição exata da interseção
+    x1, x2 = d[idx], d[idx + 1]
+    y1, y2 = diff[idx], diff[idx + 1]
+
+    # Calculando o ponto de interseção usando interpolação linear
+    d_intersect = x1 - y1 * (x2 - x1) / (y2 - y1)
+
+    # Interpolando para encontrar as coordenadas xi, yi e o ângulo phi na interseção
+    xi_intersect = np.interp(d_intersect, d, xi)
+    yi_intersect = np.interp(d_intersect, d, yi)
+    phi_intersect = np.interp(d_intersect, d, phi)
+
+    pivotal_point = {
+        'xi': xi_intersect,
+        'yi': yi_intersect,
+        'phi': phi_intersect
+    }
+
+    # # Plot para visualizar os modos e o ponto de interseção
+    # plt.figure()
+    # plt.plot(d, u[:, 0], color=[0.4, 0.4, 0.4], linewidth=2, label="1st mode")
+    # plt.plot(d, u[:, 1], 'k', linewidth=3, label="2nd mode")
+    # plt.axvline(d_intersect, color='r', linestyle='--', label='Intersection')
+    # plt.grid(True)
+    # plt.ylabel("e_n(y)")
+    # plt.xlabel("Alongshore distance (m)")
+    # plt.legend()
+    # plt.show()
+
+    return pivotal_point
 
