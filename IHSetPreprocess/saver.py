@@ -56,6 +56,8 @@ class save_SET_standard_netCDF(object):
         self.x_pivotal = None
         self.y_pivotal = None
         self.phi_pivotal = None
+        self.average_obs = None
+        self.mask_nan_average_obs = None
 
         
     def add_waves(self, wave_data):
@@ -223,6 +225,15 @@ class save_SET_standard_netCDF(object):
             "mean_value": circmean(self.rot),
             "standard_deviation": circstd(self.rot)
         }
+        avg_obs_attrs = {
+            "units": "Meters",
+            "standard_name": "average_shoreline_position",
+            "long_name": "Average Shoreline Position",
+            "max_value": np.nanmax(self.average_obs),
+            "min_value": np.nanmin(self.average_obs),
+            "mean_value": np.nanmean(self.average_obs),
+            "standard_deviation": np.nanstd(self.average_obs)
+        }
 
         # Create dataset with xarray
         ds = xr.Dataset(
@@ -235,11 +246,23 @@ class save_SET_standard_netCDF(object):
                 "slr": (("time", "ntrs"), self.slr, slr_attrs),
                 "obs": (("time_obs", "ntrs"), self.obs, obs_attrs),
                 "rot": ("time_obs", self.rot, rot_attrs),
+                "average_obs": ("time_obs", self.average_obs, avg_obs_attrs),
                 "mask_nan_obs": (("time_obs", "ntrs"), self.mask_nan_obs, {
                     "units": "Boolean",
                     "standard_name": "mask_nan_obs",
                     "long_name": "Mask for NaNs in observations"
-                })
+                }),
+                "mask_nan_rot": ("time_obs", self.mask_nan_rot, {
+                    "units": "Boolean",
+                    "standard_name": "mask_nan_rot",
+                    "long_name": "Mask for NaNs in rotation"
+                }),
+                "mask_nan_average_obs": ("time_obs", self.mask_nan_average_obs, {
+                    "units": "Boolean",
+                    "standard_name": "mask_nan_average_obs",
+                    "long_name": "Mask for NaNs in average observations"
+                }),
+
             },
             coords={
                 "time": ("time", self.time, {
@@ -391,6 +414,9 @@ class save_SET_standard_netCDF(object):
             self.phi_pivotal = [None]
 
 
+        self.average_obs, self.mask_nan_average_obs = calculate_obs_average(self.obs)        
+
+
         self.hs = interp.hs
         self.tp = interp.tp
         self.dir = interp.dir
@@ -459,7 +485,7 @@ def calculate_rotation(X0, Y0, phi, dist):
 
     alpha[alpha < 0] += 360
 
-    return alpha, nans_rot
+    return alpha, mask_nans
 
 from sklearn.decomposition import PCA
 # import matplotlib.pyplot as plt
@@ -529,3 +555,17 @@ def find_pivotal_point(obs, xi, yi, phi):
 
     return pivotal_point
 
+def calculate_obs_average(obs):
+    """
+    Calculate the average of the observations
+    """
+
+    nans_rot = np.sum(np.isnan(obs), axis=1) > 0.2 * obs.shape[1]
+
+    mean_obs = np.nanmean(obs, axis=1)
+
+    mean_obs[nans_rot] = np.nan
+
+    mask_nan = np.isnan(mean_obs)
+
+    return mean_obs, mask_nan
