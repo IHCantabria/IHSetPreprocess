@@ -118,9 +118,9 @@ class shoreline:
             y_tot = np.concatenate((y_tot, self.shores[key]['y']))
         
         if np.max(x_tot) - np.min(x_tot) > np.max(y_tot) - np.min(y_tot):
-            self.flag_f = 1
-        else:
             self.flag_f = 0
+        else:
+            self.flag_f = 1
 
 
 
@@ -162,7 +162,7 @@ class refLine:
         self.meanPoint = ref['meanPoint']
         self.dx = ref['dx']
         self.mode = ref['mode']
-        self.flagSea = ref['flagSea']
+        # self.flagSea = ref['flagSea']
         self.flag_f = ref['flag_f']
         if self.mode == 'pol1':
             self.despl = ref['despl']
@@ -178,31 +178,23 @@ class transects:
         alpha = refline.alpha
         alphap = refline.alphap
         dx = refline.dx
-        xyf = find_transects_f(xyi, alphap, length, refline.flagSea, refline.flag_f)
+        xyf = find_transects_f(xyi, alphap, length)
         
         config = {'length': length, 'n': n,
                   'xyi': xyi, 'xyf': xyf,
                   'b': b, 'm': m, 'mp': mp,
                   'alpha': alpha, 'alphap': alphap,
                   'dx': dx, 'mode': refline.mode,
-                  'flagSea': refline.flagSea, 'flag_f': refline.flag_f}
+                   'flag_f': refline.flag_f} #'flagSea': refline.flagSea,
 
         trs = getTrs(config)
 
         if refline.flag_f == 1:
-            if refline.flagSea == 1:
-                self.phi = np.rad2deg(trs['phi'])[0::2]
-                self.phi05 = np.rad2deg(trs['phi'])[1::2]
-            else:
-                self.phi = 360 - (90 - np.rad2deg(trs['phi']))[0::2]
-                self.phi05 = 360 - (90 - np.rad2deg(trs['phi']))[1::2]
+            self.phi = np.rad2deg(trs['phi'])[0::2]
+            self.phi05 = np.rad2deg(trs['phi'])[1::2]
         elif refline.flag_f == 0:
-            if refline.flagSea == 1:
-                self.phi = np.rad2deg(trs['phi'])[0::2]
-                self.phi05 = np.rad2deg(trs['phi'])[1::2]
-            else:
-                self.phi = 360 - np.rad2deg(trs['phi'])[0::2]
-                self.phi05 = 360 - np.rad2deg(trs['phi'])[1::2]            
+            self.phi = np.rad2deg(trs['phi'])[0::2]
+            self.phi05 = np.rad2deg(trs['phi'])[1::2]            
         
         self.xi = trs['xi'][0::2]
         self.yi = trs['yi'][0::2]
@@ -257,11 +249,11 @@ def pol1(shorelines, seaPoint, despl, dx):
 
     if cdist(xyi.T, seaPoint.T, 'euclidean') > cdist(posIni.T, seaPoint.T, 'euclidean'):
         xyf = np.vstack((posFin[0] + np.cos(alphap) * despl, posFin[1] + np.sin(alphap) * despl))
-        flagSea = -1
+        # flagSea = -1
     else:
         xyi = np.vstack((posIni[0] + np.cos(alphap) * -despl, posIni[1] + np.sin(alphap) * -despl))
         xyf = np.vstack((posFin[0] + np.cos(alphap) * -despl, posFin[1] + np.sin(alphap) * -despl))
-        flagSea = 1
+        # flagSea = 1
 
 
     b = xyf[1] - m * xyf[0]
@@ -288,8 +280,7 @@ def pol1(shorelines, seaPoint, despl, dx):
            'm': m, 'mp': mp,
            'alpha': alpha, 'alphap': alphap,
            'meanPoint': meanPoint, 'dx': dx,
-           'despl': despl, 'mode': 'pol1',
-           'flagSea': flagSea}
+           'despl': despl, 'mode': 'pol1'} #,'flagSea': flagSea
 
     return ref
 
@@ -300,10 +291,10 @@ def draw(seaPoint, dx, refPoints, flag_f):
         refPoints = refPoints[ii,:]
     elif flag_f == 0:
         ii = np.argsort(refPoints[:,1])
-        refPoints = refPoints[ii,:]   
+        refPoints = refPoints[ii,:]
     
     meanPoint = np.vstack((np.mean(refPoints[:,0]), np.mean(refPoints[:,1])))
-        
+
     nm = int(len(refPoints)-1)
     m = np.zeros(nm)
     mp = np.zeros(nm)
@@ -313,7 +304,7 @@ def draw(seaPoint, dx, refPoints, flag_f):
     xyi = np.zeros((nm, 2))
     length = 0
 
-    if flag_f == 1:
+    if flag_f == 0:
         for i in range(1, len(refPoints[:,0])):
             m[i-1] = (refPoints[i,1]-refPoints[i-1,1])/(refPoints[i,0]-refPoints[i-1,0])
             mp[i-1] = -1/m[i-1]
@@ -322,21 +313,10 @@ def draw(seaPoint, dx, refPoints, flag_f):
             alphap[i-1] = np.arctan(mp[i-1])
             xyi[i-1,0] = refPoints[i,0] + np.cos(alphap[i-1]) * 10
             xyi[i-1,1] = refPoints[i,1] + np.sin(alphap[i-1]) * 10
-            # print(f"xyi[i-1,:]: {xyi[i-1,:]}")
-            # print(f"refPoints[i-1,:]: {refPoints[i-1,:]}")
-            # print(f"seaPoint.T: {seaPoint.T}")
 
-            # print(f"cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'): {cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean')}")
-            # print(f"cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'): {cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean')}")
-
-            if cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean') > cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'):
-                flagSea = -1
-            else:
-                flagSea = 1
             length += cdist(refPoints[i,:].reshape(1,2), refPoints[i-1,:].reshape(1,2), 'euclidean')
-            # print(f"length: {length}")
-            # print(f"flagSea: {flagSea}")
-    elif flag_f == 0:
+
+    elif flag_f == 1:
         for i in range(1, len(refPoints[:,1])):
             m[i-1] = (refPoints[i,0]-refPoints[i-1,0])/(refPoints[i,1]-refPoints[i-1,1])
             mp[i-1] = -1/m[i-1]
@@ -345,12 +325,9 @@ def draw(seaPoint, dx, refPoints, flag_f):
             alphap[i-1] = np.arctan(mp[i-1])
             xyi[i-1,0] = refPoints[i,0] + np.cos(alphap[i-1]) * 10
             xyi[i-1,1] = refPoints[i,1] + np.sin(alphap[i-1]) * 10
-            print(f"cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'): {cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean')}")
-            print(f"cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'): {cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean')}")
-            if cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean') > cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'):
-                flagSea = -1
-            else:
-                flagSea = 1
+            # print(f"cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'): {cdist(xyi[i-1,:].reshape(1,2), seaPoint.T, 'euclidean')}")
+            # print(f"cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean'): {cdist(refPoints[i-1,:].reshape(1,2), seaPoint.T, 'euclidean')}")
+
             length += cdist(refPoints[i,:].reshape(1,2), refPoints[i-1,:].reshape(1,2), 'euclidean')
 
     
@@ -362,17 +339,34 @@ def draw(seaPoint, dx, refPoints, flag_f):
 
     xyi, m, b = find_transects_i(refPoints, m, b, int(nTrs  + nTrs -1), ddxy)
 
-    alpha = np.arctan(m)
-    mp = -1/m
-    alphap = np.arctan(mp)
+    if flag_f == 0:
+        alpha = np.arctan(m)
+        mp = -1/m
+        alphap = np.arctan(mp)
+       
+    elif flag_f == 1:
+        # we have to transform the line paremeters (x = f(y) to y = f(x))
+        alpha = np.arctan(1/m)
+        mp = -m
+        alphap = np.arctan(mp)
+        # Lets check the alpha_p angle
+
+     # Lets check the alpha_p angle
+    for i in range(len(alphap)):
+        proj_1 = np.vstack((xyi[i,0] + np.cos(alphap[i]) * 10, xyi[i,1] + np.sin(alphap[i]) * 10))
+        proj_2 = np.vstack((xyi[i,0] + np.cos(alphap[i] + np.pi) * 10, xyi[i,1] + np.sin(alphap[i] + np.pi) * 10))
+        if cdist(proj_1.T, seaPoint.T, 'euclidean') > cdist(proj_2.T, seaPoint.T, 'euclidean'):
+            alphap[i] = alphap[i] + np.pi
+    
+    # print(f"Mean alphap: {np.mean(np.rad2deg(alphap[i]))}")
 
     ref = {'xyi': xyi,
            'nTrs': nTrs, 'b': b,
            'm': m, 'mp': mp,
            'alpha': alpha, 'alphap': alphap,
            'meanPoint': meanPoint, 'dx': dx,
-           'mode': 'draw',
-           'flagSea': flagSea, 'flag_f': flag_f}
+           'mode': 'draw', 'flag_f': flag_f}
+        #    'flagSea': flagSea}
 
     return ref
 
@@ -387,7 +381,7 @@ def getTrs(config):
     alpha = config['alpha']
     alphap = config['alphap']
     dx = config['dx']
-    flagSea = config['flagSea']
+    # flagSea = config['flagSea']
     flag_f = config['flag_f']
 
     nTrs = len(config['xyi'])
@@ -407,8 +401,8 @@ def getTrs(config):
             else:
                 yi[i] = xyi[1] - i * dx * np.sin(alpha)
 
-            xf[i] = xi[i] + flagSea * np.cos(alphap) * length
-            yf[i] = yi[i] + flagSea * np.sin(alphap) * length
+            xf[i] = xi[i] + np.cos(alphap) * length
+            yf[i] = yi[i] + np.sin(alphap) * length
 
             phi[i] = alpha
     elif mode == 'draw':
@@ -418,7 +412,7 @@ def getTrs(config):
             yi[i] = xyi[i,1]
             xf[i] = xyf[i,0]
             yf[i] = xyf[i,1]
-            phi[i] = alpha[i]
+            phi[i] = alphap[i]
 
     
     trs = {'xi': xi, 'yi': yi, 'xf': xf, 'yf': yf, 'n': n, 'phi': phi}
@@ -599,55 +593,6 @@ def plotDeanProfiles(domain, minDepth, maxLen, saveDir):
         plt.savefig(saveDir + '\\Prof_' + str(i+1) + '.png')
         plt.close()
 
-def interpWaves(x, y, xw, yw, Hs, Dir, Tp, surge, tide, depth):
-
-    # mkii = np.vectorize(lambda xww, yww: np.argmin(np.sqrt((x-xww) ** 2 + (y-yww) ** 2 )))
-    
-    # ii = mkii(xw, yw)
-
-    d = np.sqrt((x-x[0]) ** 2 + (y-y[0]) ** 2)
-
-    dd = np.sqrt((x[0]-xw) ** 2 + (y[0]-yw) ** 2)
-
-    # wavec = {
-    #     'depth': np.interp(d, d[ii], depth),
-    #     'Hs': np.zeros((Hs.shape[0], len(x))),
-    #     'Dir': np.zeros((Hs.shape[0], len(x))),
-    #     'Tp': np.zeros((Hs.shape[0], len(x))),
-    #     'surge': np.zeros((Hs.shape[0], len(x))),
-    #     'tide': np.zeros((Hs.shape[0], len(x))),
-    # }
-
-    # for i in range(Hs.shape[0]):
-    #     wavec['Hs'][i,:] =  np.interp(d, d[ii], Hs[i,:])
-    #     wavec['Dir'][i,:] = np.interp(d, d[ii], Dir[i,:])
-    #     wavec['Tp'][i,:] = np.interp(d, d[ii], Tp[i,:])
-    #     wavec['surge'][i,:] = np.interp(d, d[ii], surge[i,:])
-    #     wavec['tide'][i,:] = np.interp(d, d[ii], tide[i,:])
-
-    wavec = {
-        'depth': np.interp(d, dd, depth),
-        # 'depth': np.zeros((len(x), Hs.shape[1])),
-        'Hs': np.zeros((Hs.shape[1], len(x))),
-        'doc': np.zeros((Hs.shape[1], len(x))),
-        'Dir': np.zeros((Hs.shape[1], len(x))),
-        'Tp': np.zeros((Hs.shape[1], len(x))),
-        'surge': np.zeros((Hs.shape[1], len(x))),
-        'tide': np.zeros((Hs.shape[1], len(x)))
-    }
-
-    for i in range(Hs.shape[1]):
-        wavec['Hs'][i,:] =  np.interp(d, dd, Hs[:,i])
-        wavec['Dir'][i,:] = np.interp(d, dd, Dir[:,i])
-        wavec['Tp'][i,:] = np.interp(d, dd, Tp[:,i])
-        wavec['surge'][i,:] = np.interp(d, dd, surge[:,i])
-        wavec['tide'][i,:] = np.interp(d, dd, tide[:,i])
-        Hs12, Ts12 = Hs12Calc(Hs[:,i], Tp[:,i])
-        wavec['doc'][i,:] = depthOfClosure(Hs12, Ts12)
-        # wavec['depth'][:,i] = np.interp(d, dd, depth[:,i])
-    
-
-    return wavec
 
 def find_transects_i(pontos, m, b, num_transectos, ddxy):
 
@@ -674,17 +619,12 @@ def find_transects_i(pontos, m, b, num_transectos, ddxy):
 
     return interp_pontos, inter_m, inter_b
 
-def find_transects_f(pontos, alphap, length, flagSea, flag_f):
+def find_transects_f(pontos, alphap, length):
 
     xyf = np.zeros_like(pontos)
 
-    if flag_f == 1:
-        for i in range(0, len(pontos[:,0])):
-            xyf[i,0] = pontos[i,0] + flagSea * np.cos(alphap[i]) * length
-            xyf[i,1] = pontos[i,1] + flagSea * np.sin(alphap[i]) * length
-    elif flag_f == 0:
-        for i in range(0, len(pontos[:,0])):
-            xyf[i,0] = pontos[i,0] + flagSea * -1 * np.sin(alphap[i]) * length
-            xyf[i,1] = pontos[i,1] + flagSea * -1 * np.cos(alphap[i]) * length
+    for i in range(0, len(pontos[:,0])):
+        xyf[i,0] = pontos[i,0] + np.cos(alphap[i]) * length
+        xyf[i,1] = pontos[i,1] + np.sin(alphap[i]) * length
 
     return xyf

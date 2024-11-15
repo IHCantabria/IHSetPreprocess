@@ -1,13 +1,11 @@
 import scipy.io
 import pandas as pd
-# import xarray as xr
-# import matplotlib.pyplot as plt
-# from windrose import WindroseAxes
-# import seaborn as sns
 import numpy as np
 import geopandas as gpd
 from shapely.geometry import LineString, Point
 from .CoastSat_handler import shoreline
+import xarray as xr
+from datetime import datetime
 
 class wave_data(object):
     """
@@ -31,6 +29,7 @@ class wave_data(object):
         self.dataSource = None
         self.lat = None
         self.lon = None
+        self.epsg = None
                         
     def readWaves(self, path):
         """
@@ -50,21 +49,34 @@ class wave_data(object):
             self.lat = self.data['lat'].flatten()
             self.lon = self.data['lon'].flatten()
             self.dataSource = 'IH-DATA'
+            self.epsg = 4326
         except:
             pass
 
         try:
             self.data = pd.read_csv(self.filePath)
-            self.time = pd.to_datetime(self.data['Datetime'])
-            self.hs = self.data['Hs']
-            self.tp = self.data['Tp']
-            self.dir = self.data['Dir']
+            self.time = pd.to_datetime(self.data['time'].values)
+            self.hs = self.data['Hs'].values
+            self.tp = self.data['Tp'].values
+            self.dir = self.data['Dir'].values
             self.dataSource = 'CSV file'
         except:
             pass
 
-        # the variables have dimension (time), we need dimensions (time, 1)
+        try:
+            self.data = xr.open_dataset(self.filePath)
+            self.time = pd.to_datetime(self.data.time.values)
+            self.hs = self.data.VHM0.values.flatten()
+            self.tp = self.data.VTPK.values.flatten()
+            self.dir = self.data.VMDR.values.flatten()
+            self.lat = self.data.latitude.values
+            self.lon = self.data.longitude.values
+            self.epsg = 4326
+            self.dataSource = 'Copernicus'
+        except:
+            pass
 
+        # the variables have dimension (time), we need dimensions (time, 1)
         self.hs = self.hs.reshape(-1,1)
         self.tp = self.tp.reshape(-1,1)
         self.dir = self.dir.reshape(-1,1)
@@ -73,7 +85,15 @@ class wave_data(object):
             return 'Wrong data format'
         else:
             return 'Data loaded correctly'
-            
+    
+    def add_coords(self, path):
+        """ Add coordinates to the handler """
+
+        coords = pd.read_csv(path)
+        self.lat = coords.lat.values
+        self.lon = coords.lon.values
+        self.epsg = coords.epsg.values[0]
+
     # def HsRose(self):
     #     """
     #     Plotting HsRose
@@ -178,20 +198,21 @@ class sl_data(object):
             self.lat_surge = GOS['lat_zeta'].flatten()
             self.lon_surge = GOS['lon_zeta'].flatten()
             self.dataSource_surge = 'IH-DATA'
+            self.surge = self.surge.reshape(-1,1)
         except:
                 pass
         
         try:
-            Surge = pd.read_csv(self.filePath)
-            Time = Surge['Datetime'].values
-            self.time_surge = pd.to_datetime(Time)
-            self.dataTide = Surge['Tide'].values
+            # timer = np.vectorize(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
+            Surge = pd.read_csv(filePath)
+            self.time_surge = Surge['time'].values
+            self.time_surge = pd.to_datetime(self.time_surge)
+            self.dataTide = Surge['surge'].values
             self.dataSource_surge = 'CSV file'
+            self.surge = self.surge.reshape(-1,1)
         except:
                 pass
-        
-        self.surge = self.surge.reshape(-1,1)
-        
+                
         if self.dataSource_surge == None:
             return 'Wrong data format'
         else:
@@ -210,19 +231,21 @@ class sl_data(object):
             self.lat_tide = GOT['lat_tide'].flatten()
             self.lon_tide = GOT['lon_tide'].flatten()
             self.dataSource_tide = 'IH-DATA'
+            self.tide = self.tide.reshape(-1,1)
         except:
                 pass
         
         try:
-            Tide = pd.read_csv(self.filePath)
-            Time = Tide['Datetime'].values
-            self.time_tide = pd.to_datetime(Time)
-            self.dataTide = Tide['Tide'].values
+        # datetime format 'yyyy-mm-dd hh:mm:ss'
+            # timer = np.vectorize(lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S'))
+            Tide = pd.read_csv(filePath)
+            self.time_tide = Tide['time'].values
+            self.time_tide = pd.to_datetime(self.time_tide)
+            self.tide = Tide['tide'].values
             self.dataSource_tide = 'CSV file'
+            self.tide = self.tide.reshape(-1,1)
         except:
             pass
-
-        self.tide = self.tide.reshape(-1,1)
         
         if self.dataSource_tide == None:
             return 'Wrong data format'
@@ -256,6 +279,13 @@ class obs_data(object):
         self.obs = None
         # self.ntrs = np.array([1])
         self.ntrs = None
+        self.intersections = None
+        self.xi = None
+        self.yi = None
+        self.xf = None
+        self.yf = None
+        self.phi = None
+        self.epsg = None
         
     def readObs(self, path):
         """
@@ -264,11 +294,14 @@ class obs_data(object):
         self.filePath = path
         try:
             data = pd.read_csv(self.filePath)
-            Time = data['Datetime'].values
+            Time = data['time'].values
             self.time_obs = pd.to_datetime(Time)
-            self.obs = data['Obs']
+            #Now we remove the time column
+            data = data.drop(columns=['time'])
+            self.obs = np.zeros((len(data), len(data.columns)))
+            for i, key in enumerate(data.keys()):
+                self.obs[:, i] = data[key].values
             self.dataSource = 'CSV file'
-            self.obs = self.obs.reshape(-1,1)
         except:
                 pass
         
@@ -291,6 +324,19 @@ class obs_data(object):
             return 'Wrong data format'
         else:
             return 'Data loaded correctly'
+        
+    def add_obs_coords(self, path):
+        """ Add observation coordinates to the handler """
+        obs_coords = pd.read_csv(path)
+        self.xi = obs_coords.xi.values
+        self.yi = obs_coords.yi.values
+        self.xf = obs_coords.xf.values
+        self.yf = obs_coords.yf.values
+        # Lets calculate the phi
+        alpha = np.arctan2(self.yf - self.yi, self.xf - self.xi)
+        self.phi = np.rad2deg(alpha)
+        self.epsg = obs_coords.epsg.values[0]
+        self.ntrs = len(self.xi)
     
     def CoastSatR(self, epsg, sea_point, ref_points, dx, length=500):
          '''
@@ -317,6 +363,9 @@ class obs_data(object):
             self.xf = domain.trs.xf
             self.yf = domain.trs.yf
             self.phi = domain.trs.phi
+            self.epsg = domain.epsg
+            # print(f"flag_f: {domain.flag_f}")
+
 
 
 def find_intersections2(obs_shores, transects, gap_threshold=100):
