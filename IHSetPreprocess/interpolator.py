@@ -50,15 +50,9 @@ class interpolator(object):
         """
         Check the time consistency of the data
         """
-        if len(self.time) == len(self.time_surge) == len(self.time_tide):
-            if np.sum(self.time == self.time_surge == self.time_tide):
-                return 'Time is consistent'
-            else:
-                self.interp_time()
-                return 'Interpolating time'
-        else:
-            self.interp_time()
-            return 'Interpolating time'
+
+        self.interp_time()
+        return 'Interpolating time'
     
     def check_dimensions(self):
         """
