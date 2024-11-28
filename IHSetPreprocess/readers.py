@@ -10,6 +10,7 @@ from windrose import WindroseAxes
 import seaborn as sns
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
+import matplotlib.cm as cm
 
 class wave_data(object):
     """
@@ -106,15 +107,19 @@ class wave_data(object):
         plt.rcParams.update({'font.size': 7})
         plt.rcParams.update({'font.weight': 'bold'})
 
-        fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig = plt.figure(figsize=(5, 4), dpi=300, linewidth=5, edgecolor="#04253a")
         ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
         fig.add_axes(ax)
-        
-        data = pd.DataFrame({'X': self.dir, 'Y': self.hs})
+        dd = np.reshape(self.dir, (len(self.dir)))
+        hhs = np.reshape(self.hs, (len(self.hs)))
+        data = pd.DataFrame({'X': dd, 'Y': hhs})
         data = data.dropna()
-        ax.bar(data['X'], data['Y'], normed=True, bins=[0, 0.5, 1, 1.5, 2, 2.5], opening=0.8, edgecolor='white')
-        ax.set_legend(title=r"$Hs \, (m)$", loc='best')
-        
+        cmap = cm.get_cmap('jet')
+        ax.bar(data['X'], data['Y'], normed=True, bins=[0, 0.5, 1, 1.5, 2, 2.5], opening=0.8, edgecolor='white', cmap=cmap)
+        # ax.set_legend(title=r"$Hs \, (m)$", loc='best')
+        legend = ax.set_legend(title=r"$H_s [m]$", loc='center left', bbox_to_anchor=(1.1, 0.5))
+        plt.setp(legend.get_texts(), fontsize='x-small')
+        plt.tight_layout()
         plt.show()
         
     def TpRose(self):
@@ -128,12 +133,17 @@ class wave_data(object):
         fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
         ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
         fig.add_axes(ax)
+
+        dd = np.reshape(self.dir, (len(self.dir)))
+        ttp = np.reshape(self.tp, (len(self.tp)))
         
-        data = pd.DataFrame({'X': self.wav['Dir'], 'Y': self.wav['Tp']})
+        data = pd.DataFrame({'X': dd, 'Y': ttp})
         data = data.dropna()
-        ax.bar(data['X'], data['Y'], normed=True, bins=[0.0, 3.0, 6.0, 9.0, 12.0, 15.0], opening=0.8, edgecolor='white')
-        ax.set_legend(title=r"$Tp \, (sec)$", loc='best')
-        
+        cmap = cm.get_cmap('jet')
+        ax.bar(data['X'], data['Y'], normed=True, bins=[0.0, 3.0, 6.0, 9.0, 12.0, 15.0], opening=0.8, edgecolor='white', cmap=cmap)
+        legend = ax.set_legend(title=r"$T_p [s]$", loc='center left', bbox_to_anchor=(1.1, 0.5))
+        plt.setp(legend.get_texts(), fontsize='x-small')
+        plt.tight_layout()
         plt.show()
         
     def densityHsTp(self):
@@ -147,21 +157,21 @@ class wave_data(object):
                 'weight': 'bold',
                 'size': 8}
 
-        XX = 'Hs'
-        YY = 'Tp'
-        data = pd.DataFrame({'X': self.wav[XX], 'Y': self.wav[YY]})
+        XX = np.reshape(self.hs, (len(self.hs)))
+        YY = np.reshape(self.tp, (len(self.tp)))
+        data = pd.DataFrame({'X': XX, 'Y': YY})
         data = data.dropna()
 
         fig = plt.figure(figsize=(5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
 
-        sns.kdeplot(data=data, x='X', y='Y', cmap='Blues', fill=True, thresh=0, levels=20)
+        sns.kdeplot(data=data, x='X', y='Y', cmap='turbo', fill=True, thresh=0, levels=20)
 
         plt.xlim([np.floor(np.min(data['X'])),np.floor(np.max(data['X']))])
         plt.ylim([np.floor(np.min(data['Y'])),np.floor(np.max(data['Y']))])
-        plt.xlabel(XX, fontdict=font)
-        plt.ylabel(YY, fontdict=font)
+        plt.xlabel(r'$H_s [m]$', fontdict=font)
+        plt.ylabel(r'$T_p [s]$', fontdict=font)
         plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
-        
+        plt.tight_layout()
         plt.show()        
 
 class sl_data(object):
@@ -428,7 +438,7 @@ class obs_data(object):
 
         #Set the x-axis ticks labels as 'YYYY'
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
-        
+        plt.tight_layout()
         plt.show()
     
     def obs_histogram(self):
@@ -450,7 +460,7 @@ class obs_data(object):
         plt.xlabel('Shoreline position [m]', fontdict=font)
         plt.ylabel('Frequency', fontdict=font)
         plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
-                
+        plt.tight_layout()
         plt.show()
 
 def find_intersections2(obs_shores, transects, gap_threshold=100):
