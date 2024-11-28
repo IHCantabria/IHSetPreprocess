@@ -5,7 +5,11 @@ import geopandas as gpd
 from shapely.geometry import LineString, Point
 from .CoastSat_handler import shoreline
 import xarray as xr
-from datetime import datetime
+from matplotlib import pyplot as plt
+from windrose import WindroseAxes
+import seaborn as sns
+import matplotlib.colors as mcolors
+import matplotlib.dates as mdates
 
 class wave_data(object):
     """
@@ -94,71 +98,71 @@ class wave_data(object):
         self.lon = coords.lon.values
         self.epsg = coords.epsg.values[0]
 
-    # def HsRose(self):
-    #     """
-    #     Plotting HsRose
-    #     """
-    #     plt.rcParams.update({'font.family': 'serif'})
-    #     plt.rcParams.update({'font.size': 7})
-    #     plt.rcParams.update({'font.weight': 'bold'})
+    def HsRose(self):
+        """
+        Plotting HsRose
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
 
-    #     fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
-    #     ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
-    #     fig.add_axes(ax)
+        fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
+        fig.add_axes(ax)
         
-    #     data = pd.DataFrame({'X': self.dir, 'Y': self.hs})
-    #     data = data.dropna()
-    #     ax.bar(data['X'], data['Y'], normed=True, bins=[0, 0.5, 1, 1.5, 2, 2.5], opening=0.8, edgecolor='white')
-    #     ax.set_legend(title=r"$Hs \, (m)$", loc='best')
+        data = pd.DataFrame({'X': self.dir, 'Y': self.hs})
+        data = data.dropna()
+        ax.bar(data['X'], data['Y'], normed=True, bins=[0, 0.5, 1, 1.5, 2, 2.5], opening=0.8, edgecolor='white')
+        ax.set_legend(title=r"$Hs \, (m)$", loc='best')
         
-    #     fig.savefig('./results/Rose_Wave'+'.png',dpi=300)
+        plt.show()
         
-    # def TpRose(self):
-    #     """
-    #     Plotting TpRose
-    #     """
-    #     plt.rcParams.update({'font.family': 'serif'})
-    #     plt.rcParams.update({'font.size': 7})
-    #     plt.rcParams.update({'font.weight': 'bold'})
+    def TpRose(self):
+        """
+        Plotting TpRose
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
 
-    #     fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
-    #     ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
-    #     fig.add_axes(ax)
+        fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
+        fig.add_axes(ax)
         
-    #     data = pd.DataFrame({'X': self.wav['Dir'], 'Y': self.wav['Tp']})
-    #     data = data.dropna()
-    #     ax.bar(data['X'], data['Y'], normed=True, bins=[0.0, 3.0, 6.0, 9.0, 12.0, 15.0], opening=0.8, edgecolor='white')
-    #     ax.set_legend(title=r"$Tp \, (sec)$", loc='best')
+        data = pd.DataFrame({'X': self.wav['Dir'], 'Y': self.wav['Tp']})
+        data = data.dropna()
+        ax.bar(data['X'], data['Y'], normed=True, bins=[0.0, 3.0, 6.0, 9.0, 12.0, 15.0], opening=0.8, edgecolor='white')
+        ax.set_legend(title=r"$Tp \, (sec)$", loc='best')
         
-    #     fig.savefig('./results/Rose_Wave'+'.png',dpi=300)
+        plt.show()
         
-    # def densityHsTp(self):
-    #     """
-    #     Plotting densityHsTp
-    #     """
-    #     plt.rcParams.update({'font.family': 'serif'})
-    #     plt.rcParams.update({'font.size': 7})
-    #     plt.rcParams.update({'font.weight': 'bold'})
-    #     font = {'family': 'serif',
-    #             'weight': 'bold',
-    #             'size': 8}
+    def densityHsTp(self):
+        """
+        Plotting densityHsTp
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
+        font = {'family': 'serif',
+                'weight': 'bold',
+                'size': 8}
 
-    #     XX = 'Hs'
-    #     YY = 'Tp'
-    #     data = pd.DataFrame({'X': self.wav[XX], 'Y': self.wav[YY]})
-    #     data = data.dropna()
+        XX = 'Hs'
+        YY = 'Tp'
+        data = pd.DataFrame({'X': self.wav[XX], 'Y': self.wav[YY]})
+        data = data.dropna()
 
-    #     fig = plt.figure(figsize=(5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig = plt.figure(figsize=(5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
 
-    #     sns.kdeplot(data=data, x='X', y='Y', cmap='Blues', fill=True, thresh=0, levels=20)
+        sns.kdeplot(data=data, x='X', y='Y', cmap='Blues', fill=True, thresh=0, levels=20)
 
-    #     plt.xlim([np.floor(np.min(data['X'])),np.floor(np.max(data['X']))])
-    #     plt.ylim([np.floor(np.min(data['Y'])),np.floor(np.max(data['Y']))])
-    #     plt.xlabel(XX, fontdict=font)
-    #     plt.ylabel(YY, fontdict=font)
-    #     plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+        plt.xlim([np.floor(np.min(data['X'])),np.floor(np.max(data['X']))])
+        plt.ylim([np.floor(np.min(data['Y'])),np.floor(np.max(data['Y']))])
+        plt.xlabel(XX, fontdict=font)
+        plt.ylabel(YY, fontdict=font)
+        plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
         
-    #     fig.savefig('./results/Density_HsTp'+'.png',dpi=300)        
+        plt.show()        
 
 class sl_data(object):
     """
@@ -252,6 +256,29 @@ class sl_data(object):
         else:
             return 'Data loaded correctly'
         
+    def sl_timeseries(self):
+        """
+        Plotting sea level timeseries
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
+
+        fig, ax = plt.subplots(figsize=(12, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+
+        ax.plot(self.time_tide, self.tide, color='blue', linewidth=0.8, label='Tide')
+        ax.plot(self.time_surge, self.surge, color='red', linewidth=0.8, label='Surge')
+
+        ax.set_ylabel('Sea level [m]')
+        ax.grid(True)
+        ax.set_facecolor((0, 0, 0, 0.15))
+        ax.legend()
+
+        #Set the x-axis ticks labels as 'YYYY'
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+        
+        plt.show()
+
     # def readSLR(self, filePath):
     #     """
     #     Read sea level data
@@ -366,30 +393,65 @@ class obs_data(object):
             self.epsg = domain.epsg
             # print(f"flag_f: {domain.flag_f}")
         
-    def calculate_rotation(X0, Y0, phi, dist):
+    def obs_timeseries(self):
         """
-        Calculate the shoreline rotation.
+        Plotting observation timeseries
         """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
 
-        phi = np.deg2rad(phi)
+        fig, ax = plt.subplots(figsize=(12, 5), dpi=300, linewidth=5, edgecolor="#04253a")
 
-        mean_shoreline = np.nanmean(dist, axis=0)
+        mn = self.ntrs
 
-        detrended_dist = np.zeros(dist.shape)
+        colors = [mcolors.to_rgba(color) for color in plt.cm.turbo(np.linspace(0, 1, mn))]
 
-        for i in range(dist.shape[1]):
-            detrended_dist[:, i] = dist[:, i] - mean_shoreline[i]
+        for i in range(mn):
+            ax.plot(self.time_obs, self.obs[:,i], color=colors[i], linewidth=0.8)
 
-        alpha = np.zeros(dist.shape[0])
+        ax.set_ylabel('Shoreline position [m]')
+        ax.grid(True)
+        ax.set_facecolor((0, 0, 0, 0.15))
+
+        # Adiciona a colorbar
+        cmap = plt.cm.jet
+        norm = mcolors.Normalize(vmin=0, vmax=1)
+        sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
+        sm.set_array([])
+        cbar = plt.colorbar(sm, ax=ax, orientation='horizontal', location = 'top', shrink=0.5)
+
+        # Define os ticks e os rótulos dos ticks da colorbar
+        ticks = [0, 1]
+        cbar.set_ticks(ticks)  # Define os locais dos ticks
+        cbar.set_ticklabels(['Transect 1', f'Transect {mn}'])
+
+        #Set the x-axis ticks labels as 'YYYY'
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
         
-        for i in range(dist.shape[0]):
-            XN, YN = X0 + detrended_dist[i, :] * np.cos(phi), Y0 + detrended_dist[i, :] * np.sin(phi)
-            fitter = np.polyfit(XN, YN, 1)
-            alpha[i] = 90 - np.rad2deg(np.arctan(fitter[0]))
+        plt.show()
+    
+    def obs_histogram(self):
+        """
+        Plotting observation histogram
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
+        font = {'family': 'serif',
+                'weight': 'bold',
+                'size': 8}
+        
+        average_obs = np.nanmean(self.obs, axis=1)
 
-        alpha[alpha < 0] += 360
+        fig, ax = plt.subplots(figsize=(5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
 
-
+        sns.histplot(average_obs, bins=20, kde=True, color='blue', alpha=0.5)
+        plt.xlabel('Shoreline position [m]', fontdict=font)
+        plt.ylabel('Frequency', fontdict=font)
+        plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+                
+        plt.show()
 
 def find_intersections2(obs_shores, transects, gap_threshold=100):
     results = {}
