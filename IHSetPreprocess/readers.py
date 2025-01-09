@@ -11,6 +11,8 @@ import seaborn as sns
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import matplotlib.cm as cm
+from scipy.spatial import cKDTree
+
 
 class wave_data(object):
     """
@@ -107,7 +109,7 @@ class wave_data(object):
         plt.rcParams.update({'font.size': 7})
         plt.rcParams.update({'font.weight': 'bold'})
 
-        fig = plt.figure(figsize=(5, 4), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig = plt.figure(figsize=(5, 3), dpi=200, linewidth=5, edgecolor="#04253a")
         ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
         fig.add_axes(ax)
         dd = np.reshape(self.dir, (len(self.dir)))
@@ -117,7 +119,7 @@ class wave_data(object):
         cmap = cm.get_cmap('jet')
         ax.bar(data['X'], data['Y'], normed=True, bins=[0, 0.5, 1, 1.5, 2, 2.5], opening=0.8, edgecolor='white', cmap=cmap)
         # ax.set_legend(title=r"$Hs \, (m)$", loc='best')
-        legend = ax.set_legend(title=r"$H_s [m]$", loc='center left', bbox_to_anchor=(1.1, 0.5))
+        legend = ax.set_legend(title=r"$H_s [m]$", loc='center left', bbox_to_anchor=(1.2, 0.5))
         plt.setp(legend.get_texts(), fontsize='x-small')
         plt.tight_layout()
         plt.show()
@@ -130,7 +132,7 @@ class wave_data(object):
         plt.rcParams.update({'font.size': 7})
         plt.rcParams.update({'font.weight': 'bold'})
 
-        fig = plt.figure(figsize=(6.5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig = plt.figure(figsize=(5.5, 3), dpi=200, linewidth=5, edgecolor="#04253a")
         ax = WindroseAxes(fig, [0.1, 0.1, 0.8, 0.8])
         fig.add_axes(ax)
 
@@ -141,38 +143,86 @@ class wave_data(object):
         data = data.dropna()
         cmap = cm.get_cmap('jet')
         ax.bar(data['X'], data['Y'], normed=True, bins=[0.0, 3.0, 6.0, 9.0, 12.0, 15.0], opening=0.8, edgecolor='white', cmap=cmap)
-        legend = ax.set_legend(title=r"$T_p [s]$", loc='center left', bbox_to_anchor=(1.1, 0.5))
+        legend = ax.set_legend(title=r"$T_p [s]$", loc='center left', bbox_to_anchor=(1.2, 0.5))
         plt.setp(legend.get_texts(), fontsize='x-small')
         plt.tight_layout()
         plt.show()
-        
-    def densityHsTp(self):
-        """
-        Plotting densityHsTp
-        """
+
+    
+    def densityHsTpFastScatter(self):
         plt.rcParams.update({'font.family': 'serif'})
         plt.rcParams.update({'font.size': 7})
         plt.rcParams.update({'font.weight': 'bold'})
-        font = {'family': 'serif',
-                'weight': 'bold',
-                'size': 8}
+        font = {'family': 'serif', 'weight': 'bold', 'size': 8}
 
+        # Prepare data
         XX = np.reshape(self.hs, (len(self.hs)))
         YY = np.reshape(self.tp, (len(self.tp)))
         data = pd.DataFrame({'X': XX, 'Y': YY})
         data = data.dropna()
 
-        fig = plt.figure(figsize=(5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        # Create a 2D histogram for density estimation
+        xedges = np.linspace(data['X'].min(), data['X'].max(), 100)  # Adjust number of bins here
+        yedges = np.linspace(data['Y'].min(), data['Y'].max(), 100)  # Adjust number of bins here
+        histogram, xedges, yedges = np.histogram2d(data['X'], data['Y'], bins=(xedges, yedges))
+        
+        # Get bin indices for each point
+        xidx = np.digitize(data['X'], xedges) - 1  # -1 to convert to 0-based index
+        yidx = np.digitize(data['Y'], yedges) - 1
+        # Handle edge cases where points fall on the right edge
+        xidx[xidx == histogram.shape[0]] -= 1
+        yidx[yidx == histogram.shape[1]] -= 1
 
-        sns.kdeplot(data=data, x='X', y='Y', cmap='turbo', fill=True, thresh=0, levels=20)
+        # Map each point to its density value
+        point_density = histogram[xidx, yidx]
 
-        plt.xlim([np.floor(np.min(data['X'])),np.floor(np.max(data['X']))])
-        plt.ylim([np.floor(np.min(data['Y'])),np.floor(np.max(data['Y']))])
+        fig, ax = plt.subplots(figsize=(5, 4), dpi=200)
+        scatter = ax.scatter(data['X'], data['Y'], c=point_density, cmap='turbo', s=1, edgecolor=None, linewidths=0, alpha=1)
+        cbar = fig.colorbar(scatter, ax=ax)
+        cbar.set_label('Density')
+
+        # Set limits and labels
+        plt.xlim([np.floor(data['X'].min()), np.ceil(data['X'].max())])
+        plt.ylim([np.floor(data['Y'].min()), np.ceil(data['Y'].max())])
+
         plt.xlabel(r'$H_s [m]$', fontdict=font)
         plt.ylabel(r'$T_p [s]$', fontdict=font)
-        plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+        plt.grid(visible=True, which='both', linestyle='--', linewidth=0.5)
         plt.tight_layout()
-        plt.show()        
+        plt.show()
+
+    def wave_timeseries(self):
+        """
+        Plotting wave timeseries
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
+
+        fig, ax = plt.subplots(3, 1, figsize=(6, 3), dpi=200, linewidth=5, edgecolor="#04253a")
+
+        ax[0].plot(self.time, self.hs, color='blue', linewidth=0.5)
+        ax[0].set_ylabel(r'$H_s [m]$')
+        ax[0].grid(True)
+        ax[0].set_facecolor((0, 0, 0, 0.15))
+        ax[0].xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+
+        ax[1].plot(self.time, self.tp, color='red', linewidth=0.5)
+        ax[1].set_ylabel(r'$T_p [s]$')
+        ax[1].grid(True)
+        ax[1].set_facecolor((0, 0, 0, 0.15))
+        ax[1].xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+
+        ax[2].scatter(self.time, self.dir, s = 0.3, color='black')
+        ax[2].set_ylabel(r'$Dir [°]$')
+        ax[2].grid(True)
+        ax[2].set_facecolor((0, 0, 0, 0.15))
+        ax[2].xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+        dir_labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
+        ax[2].set_yticks(np.arange(0, 361, 45))
+        ax[2].set_yticklabels(dir_labels)
+        plt.tight_layout()
+        plt.show()
 
 class sl_data(object):
     """
@@ -221,7 +271,7 @@ class sl_data(object):
             Surge = pd.read_csv(filePath)
             self.time_surge = Surge['time'].values
             self.time_surge = pd.to_datetime(self.time_surge)
-            self.dataTide = Surge['surge'].values
+            self.surge = Surge['surge'].values
             self.dataSource_surge = 'CSV file'
             self.surge = self.surge.reshape(-1,1)
         except:
@@ -274,10 +324,16 @@ class sl_data(object):
         plt.rcParams.update({'font.size': 7})
         plt.rcParams.update({'font.weight': 'bold'})
 
-        fig, ax = plt.subplots(figsize=(12, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig, ax = plt.subplots(figsize=(8, 3), dpi=200, linewidth=5, edgecolor="#04253a")
 
-        ax.plot(self.time_tide, self.tide, color='blue', linewidth=0.8, label='Tide')
-        ax.plot(self.time_surge, self.surge, color='red', linewidth=0.8, label='Surge')
+        try:
+            ax.plot(self.time_tide, self.tide, color='blue', linewidth=0.5, label='Tide')
+        except:
+            pass
+        try:
+            ax.plot(self.time_surge, self.surge, color='red', linewidth=0.5, label='Surge')
+        except:
+            pass
 
         ax.set_ylabel('Sea level [m]')
         ax.grid(True)
@@ -287,6 +343,39 @@ class sl_data(object):
         #Set the x-axis ticks labels as 'YYYY'
         ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
         
+        plt.show()
+
+    def sl_histogram(self):
+        """
+        Plotting sea level histogram
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 7})
+        plt.rcParams.update({'font.weight': 'bold'})
+        font = {'family': 'serif',
+                'weight': 'bold',
+                'size': 8}
+
+        fig, ax = plt.subplots(1, 2, figsize=(6, 3), dpi=200, linewidth=5, edgecolor="#04253a")
+
+        try:
+            sns.histplot(self.tide, bins=20, kde=True, color='blue', alpha=0.5, label='Tide', stat='density', ax=ax[0])
+            ax[0].set_xlabel('Sea level [m]', fontdict=font)
+            ax[0].set_ylabel('Density', fontdict=font)
+            ax[0].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+            ax[0].legend()
+        except:
+            pass
+        try:
+            sns.histplot(self.surge, bins=20, kde=True, color='red', alpha=0.5, label='Surge', stat='density', ax=ax[1])
+            ax[1].set_xlabel('Sea level [m]', fontdict=font)
+            ax[1].set_ylabel('Density', fontdict=font)
+            ax[1].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+            ax[1].legend()
+        except:
+            pass
+
+        plt.tight_layout()
         plt.show()
 
     # def readSLR(self, filePath):
@@ -411,7 +500,7 @@ class obs_data(object):
         plt.rcParams.update({'font.size': 7})
         plt.rcParams.update({'font.weight': 'bold'})
 
-        fig, ax = plt.subplots(figsize=(12, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig, ax = plt.subplots(figsize=(8, 4), dpi=200, linewidth=5, edgecolor="#04253a")
 
         mn = self.ntrs
 
@@ -454,11 +543,11 @@ class obs_data(object):
         
         average_obs = np.nanmean(self.obs, axis=1)
 
-        fig, ax = plt.subplots(figsize=(5, 5), dpi=300, linewidth=5, edgecolor="#04253a")
+        fig, ax = plt.subplots(figsize=(3.5, 3), dpi=200, linewidth=5, edgecolor="#04253a")
 
-        sns.histplot(average_obs, bins=20, kde=True, color='blue', alpha=0.5)
+        sns.histplot(average_obs, bins=20, kde=True, color='blue', alpha=0.5, label='Average', stat='density', ax=ax)
         plt.xlabel('Shoreline position [m]', fontdict=font)
-        plt.ylabel('Frequency', fontdict=font)
+        plt.ylabel('Density', fontdict=font)
         plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
         plt.tight_layout()
         plt.show()

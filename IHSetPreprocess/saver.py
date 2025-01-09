@@ -338,6 +338,7 @@ class save_SET_standard_netCDF(object):
                     "standard_name": "phi_pivotal",
                     "long_name": "Angle of pivotal transect"
                 }),
+
             },
             attrs=self.attrs
         )
@@ -402,6 +403,10 @@ class save_SET_standard_netCDF(object):
                 self.y_pivotal = [pivotal['yi']]
                 self.phi_pivotal = [pivotal['phi']]
                 # print(f"Pivotal point found at ({self.x_pivotal}, {self.y_pivotal}) with angle {self.phi_pivotal}")
+                #now we find the closest transect to the pivotal point
+                # dist = np.sqrt((self.xi - self.x_pivotal[0])**2 + (self.yi - self.y_pivotal[0])**2)
+                # idx = np.argmin(dist)
+                # self.pivotal_trs = idx
             else:
                 self.x_pivotal = [None]
                 self.y_pivotal = [None]
@@ -412,6 +417,7 @@ class save_SET_standard_netCDF(object):
             self.x_pivotal = [None]
             self.y_pivotal = [None]
             self.phi_pivotal = [None]
+
 
 
         self.average_obs, self.mask_nan_average_obs = calculate_obs_average(self.obs)        

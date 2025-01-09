@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: IHSetPreprocess
-Version: 1.0.6
+Version: 1.0.7
 Summary: IH-SET Preprocessing module
 Home-page: https://github.com/IHCantabria/IHSetPreprocess
 Author: Lucas de Freitas Pereira
@@ -19,4 +19,3 @@ Requires-Dist: numba
 Requires-Dist: datetime
 Requires-Dist: pandas
 Requires-Dist: IHSetUtils@ git+https://github.com/IHCantabria/IHSetUtils.git
-Requires-Dist: IHSetPreprocess@ git+https://github.com/IHCantabria/IHSetPreprocess.git
