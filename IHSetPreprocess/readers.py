@@ -429,9 +429,11 @@ class obs_data(object):
             self.shores = {}
             for i in range(len(time_obs)):
                 mask = Time == time_obs[i]
+                xx, yy = x[mask], y[mask]
+                xxf, yyf = filter_nans(xx, yy)
                 self.shores[str(i)] = {}
-                self.shores[str(i)]['x'] = x[mask]
-                self.shores[str(i)]['y'] = y[mask]
+                self.shores[str(i)]['x'] = xxf
+                self.shores[str(i)]['y'] = yyf
             
             self.time_obs = time_obs
             self.dataSource = 'CSV file'
@@ -688,3 +690,7 @@ def find_intersections(obs_shores, transects, gap_threshold=100):
                     break
 
     return results
+
+def filter_nans(x, y):
+    mask = ~np.isnan(x) & ~np.isnan(y)
+    return x[mask], y[mask]
