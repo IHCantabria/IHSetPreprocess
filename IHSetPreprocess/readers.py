@@ -11,7 +11,8 @@ import seaborn as sns
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 import matplotlib.cm as cm
-from scipy.spatial import cKDTree
+from pyproj import CRS, Transformer
+from IHSetUtils.geometry import abs_pos
 
 
 class wave_data(object):
@@ -418,18 +419,39 @@ class obs_data(object):
         Read observation data
         """
         self.filePath = path
+
         try:
             data = pd.read_csv(self.filePath)
             Time = data['time'].values
-            self.time_obs = pd.to_datetime(Time)
-            #Now we remove the time column
-            data = data.drop(columns=['time'])
-            self.obs = np.zeros((len(data), len(data.columns)))
-            for i, key in enumerate(data.keys()):
-                self.obs[:, i] = data[key].values
+            x = data['x'].values
+            y = data['y'].values
+            time_obs = pd.to_datetime(np.unique(Time))
+            self.shores = {}
+            for i in range(len(time_obs)):
+                mask = Time == time_obs[i]
+                self.shores[str(i)] = {}
+                self.shores[str(i)]['x'] = x[mask]
+                self.shores[str(i)]['y'] = y[mask]
+            
+            self.time_obs = time_obs
             self.dataSource = 'CSV file'
+
         except:
                 pass
+        
+        if self.dataSource == None:
+            try:
+                data = pd.read_csv(self.filePath)
+                Time = data['time'].values
+                self.time_obs = pd.to_datetime(Time)
+                #Now we remove the time column
+                data = data.drop(columns=['time'])
+                self.obs = np.zeros((len(data), len(data.columns)))
+                for i, key in enumerate(data.keys()):
+                    self.obs[:, i] = data[key].values
+                self.dataSource = 'CSV file'
+            except:
+                    pass
         
         try:
             geo_data = gpd.read_file(self.filePath)
@@ -463,6 +485,22 @@ class obs_data(object):
         self.phi = np.rad2deg(alpha)
         self.epsg = obs_coords.epsg.values[0]
         self.ntrs = len(self.xi)
+        self.generate_shores_csv()
+
+    def generate_shores_csv(self):
+        # self.xi, self.yi, self.obs, self.epsg
+        '''
+        Generate the shores list from csv input with transects
+        '''
+        
+        self.shores = {}
+        for i in range(self.ntrs):
+            self.shores[str(i)] = {}
+            x, y = abs_pos(self.xi[i], self.yi[i], np.deg2rad(self.phi[i]), self.obs[:, i])
+            self.shores[str(i)]['x'] = x
+            self.shores[str(i)]['y'] = y
+
+
     
     def CoastSatR(self, epsg, sea_point, ref_points, dx, length=500):
          '''
