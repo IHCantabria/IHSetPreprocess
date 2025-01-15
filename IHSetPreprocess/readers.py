@@ -437,7 +437,7 @@ class obs_data(object):
                 self.shores[str(i)]['y'] = yyf
             
             self.time_obs = time_obs
-            self.dataSource = 'CSV file'
+            self.dataSource = 'CSV file (time, x, y)'
 
         except:
                 pass
@@ -452,7 +452,7 @@ class obs_data(object):
                 self.obs = np.zeros((len(data), len(data.columns)))
                 for i, key in enumerate(data.keys()):
                     self.obs[:, i] = data[key].values
-                self.dataSource = 'CSV file'
+                self.dataSource = 'CSV file (transects)'
             except:
                     pass
         
