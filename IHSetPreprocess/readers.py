@@ -425,10 +425,11 @@ class obs_data(object):
             Time = data['time'].values
             x = data['x'].values
             y = data['y'].values
-            time_obs = pd.to_datetime(np.unique(Time))
+            time_shores = pd.to_datetime(Time)
+            time_obs = np.unique(time_shores)
             self.shores = {}
             for i in range(len(time_obs)):
-                mask = Time == time_obs[i]
+                mask = time_shores == time_obs[i]
                 xx, yy = x[mask], y[mask]
                 xxf, yyf = filter_nans(xx, yy)
                 self.shores[str(i)] = {}
