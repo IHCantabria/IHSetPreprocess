@@ -505,9 +505,9 @@ class obs_data(object):
 
     
     def CoastSatR(self, epsg, sea_point, ref_points, dx, length=500):
-         '''
-         This function extract timeseries from CoastSat geojson MULTIPOINT output.
-         '''
+        '''
+        This function extract timeseries from CoastSat geojson MULTIPOINT output.
+        '''
         domain = shoreline(self.shores, self.time_obs, epsg = epsg)
         domain.setDomain(sea_point, 'draw', dx, refPoints=ref_points)
         domain.setTransects(length)
