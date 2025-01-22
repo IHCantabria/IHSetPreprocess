@@ -10,7 +10,6 @@ from windrose import WindroseAxes
 import seaborn as sns
 import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
-import matplotlib.cm as cm
 from pyproj import CRS, Transformer
 from IHSetUtils.geometry import abs_pos
 
@@ -117,7 +116,7 @@ class wave_data(object):
         hhs = np.reshape(self.hs, (len(self.hs)))
         data = pd.DataFrame({'X': dd, 'Y': hhs})
         data = data.dropna()
-        cmap = cm.get_cmap('jet')
+        cmap = plt.cm.jet
         ax.bar(data['X'], data['Y'], normed=True, bins=[0, 0.5, 1, 1.5, 2, 2.5], opening=0.8, edgecolor='white', cmap=cmap)
         # ax.set_legend(title=r"$Hs \, (m)$", loc='best')
         legend = ax.set_legend(title=r"$H_s [m]$", loc='center left', bbox_to_anchor=(1.2, 0.5))
@@ -142,7 +141,7 @@ class wave_data(object):
         
         data = pd.DataFrame({'X': dd, 'Y': ttp})
         data = data.dropna()
-        cmap = cm.get_cmap('jet')
+        cmap = plt.cm.jet
         ax.bar(data['X'], data['Y'], normed=True, bins=[0.0, 3.0, 6.0, 9.0, 12.0, 15.0], opening=0.8, edgecolor='white', cmap=cmap)
         legend = ax.set_legend(title=r"$T_p [s]$", loc='center left', bbox_to_anchor=(1.2, 0.5))
         plt.setp(legend.get_texts(), fontsize='x-small')
