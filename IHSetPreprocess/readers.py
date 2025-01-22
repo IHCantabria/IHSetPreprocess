@@ -568,6 +568,27 @@ class obs_data(object):
         plt.tight_layout()
         plt.show()
     
+    def obs_timeseries_transect(self, number_transect):
+        """
+        Plotting observation timeseries for a specific transect
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 6})
+        plt.rcParams.update({'font.weight': 'bold'})
+ 
+        fig, ax = plt.subplots(figsize=(8, 3), dpi=200, linewidth=3, edgecolor="#04253a")
+ 
+        ax.plot(self.time_obs, self.obs[:,number_transect], 's-', markersize= "1.5", color='k', linewidth=0.5)
+ 
+        ax.set_ylabel('Shoreline position [m]')
+        ax.grid(True)
+        ax.set_facecolor((0, 0, 0, 0.15))
+ 
+        #Set the x-axis ticks labels as 'YYYY'
+        ax.xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+        plt.tight_layout()
+        plt.show()
+    
     def obs_histogram(self):
         """
         Plotting observation histogram
