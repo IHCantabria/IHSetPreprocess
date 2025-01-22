@@ -497,9 +497,9 @@ class obs_data(object):
         '''
         
         self.shores = {}
-        for i in range(self.ntrs):
+        for i in range(len(self.time_obs)):
             self.shores[str(i)] = {}
-            x, y = abs_pos(self.xi[i], self.yi[i], np.deg2rad(self.phi[i]), self.obs[:, i])
+            x, y = abs_pos(self.xi, self.yi, np.deg2rad(self.phi), self.obs[i, :])
             self.shores[str(i)]['x'] = x
             self.shores[str(i)]['y'] = y
 
