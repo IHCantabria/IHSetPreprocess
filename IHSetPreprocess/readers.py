@@ -508,29 +508,27 @@ class obs_data(object):
          '''
          This function extract timeseries from CoastSat geojson MULTIPOINT output.
          '''
+        domain = shoreline(self.shores, self.time_obs, epsg = epsg)
+        domain.setDomain(sea_point, 'draw', dx, refPoints=ref_points)
+        domain.setTransects(length)
 
-         if self.dataSource == 'CoastSat':
-            domain = shoreline(self.shores, self.time_obs, epsg = epsg)
-            domain.setDomain(sea_point, 'draw', dx, refPoints=ref_points)
-            domain.setTransects(length)
+        transects = []
+        for i in range(len(domain.trs.xi)):
+            transects.append({'xi': domain.trs.xi[i], 'yi': domain.trs.yi[i], 'xf': domain.trs.xf[i], 'yf': domain.trs.yf[i]})
+        
+        dists = find_intersections(self.shores, transects)
+        intersections = find_intersections2(self.shores, transects)
 
-            transects = []
-            for i in range(len(domain.trs.xi)):
-                transects.append({'xi': domain.trs.xi[i], 'yi': domain.trs.yi[i], 'xf': domain.trs.xf[i], 'yf': domain.trs.yf[i]})
-            
-            dists = find_intersections(self.shores, transects)
-            intersections = find_intersections2(self.shores, transects)
-
-            self.obs = dists
-            self.ntrs = len(transects)
-            self.intersections = intersections
-            self.xi = domain.trs.xi
-            self.yi = domain.trs.yi
-            self.xf = domain.trs.xf
-            self.yf = domain.trs.yf
-            self.phi = domain.trs.phi
-            self.epsg = domain.epsg
-            # print(f"flag_f: {domain.flag_f}")
+        self.obs = dists
+        self.ntrs = len(transects)
+        self.intersections = intersections
+        self.xi = domain.trs.xi
+        self.yi = domain.trs.yi
+        self.xf = domain.trs.xf
+        self.yf = domain.trs.yf
+        self.phi = domain.trs.phi
+        self.epsg = domain.epsg
+        # print(f"flag_f: {domain.flag_f}")
         
     def obs_timeseries(self):
         """
