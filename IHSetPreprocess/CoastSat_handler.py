@@ -111,44 +111,17 @@ class shoreline:
     def find_flag_f(self):
         x_tot = np.array([])
         y_tot = np.array([])
-        self.flag_f = 0
 
         for key in self.shores.keys():
             x_tot = np.concatenate((x_tot, self.shores[key]['x']))
             y_tot = np.concatenate((y_tot, self.shores[key]['y']))
         
         if np.max(x_tot) - np.min(x_tot) > np.max(y_tot) - np.min(y_tot):
-            self.flag_f = 0
-        else:
             self.flag_f = 1
+        else:
+            self.flag_f = 0
 
 
-
-    def interpClimate(self, wavec):
-
-        prof = np.zeros((len(self.profiles), 2))
-        for i, key in zip(range(len(self.profiles)),self.profiles.keys()):
-
-                ii = np.argmax(np.abs(self.profiles[key][:,2]))
-                prof[i, 0] = self.profiles[key][ii,0]
-                prof[i, 1] = self.profiles[key][ii,1]
-
-
-
-        self.waves = interpWaves(prof[:,0],
-                                 prof[:,1],
-                                 wavec['x'],
-                                 wavec['y'],
-                                 wavec['Hs'],
-                                 wavec['Dir'],
-                                 wavec['Tp'],
-                                 wavec['surge'],
-                                 wavec['tide'],
-                                 wavec['depth'])
-        
-        self.waves['time'] = wavec['time']
-        self.waves['x'] = wavec['x']
-        self.waves['y'] = wavec['y']
 
 class refLine:
     def __init__(self, ref):
