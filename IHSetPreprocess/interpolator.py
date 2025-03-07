@@ -2,6 +2,8 @@
 import numpy as np
 from pyproj import CRS, Transformer
 import pandas as pd
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 class interpolator(object):
     """
@@ -203,6 +205,44 @@ def interpWaves(x, y, xw, yw, var):
 
     return res
             
+def interpolate_and_smooth(ref_points, n_points=1000, smoothing_window=101, polyorder=3):
+    """
+    Interpola os pontos de referência para n_points e aplica suavização.
+    Se houver somente 2 pontos, utiliza interpolação linear.
+    """
 
+    # Calcula a distância acumulada entre os pontos originais
+    distances = np.sqrt(np.diff(ref_points[:, 0])**2 + np.diff(ref_points[:, 1])**2)
+    cum_dist = np.hstack(([0], np.cumsum(distances)))
+    
+    # Cria uma nova grade de distâncias uniformemente espaçadas
+    new_distances = np.linspace(0, cum_dist[-1], n_points)
+    
+    # Escolhe o método de interpolação: linear se houver apenas 2 pontos, caso contrário cúbica
+    kind = 'linear' if len(ref_points) < 4 else 'cubic'
+    
+    interp_func_x = interp1d(cum_dist, ref_points[:, 0], kind=kind)
+    interp_func_y = interp1d(cum_dist, ref_points[:, 1], kind=kind)
+    x_new = interp_func_x(new_distances)
+    y_new = interp_func_y(new_distances)
+    
+    # Se houver apenas dois pontos (linha reta), não há necessidade de suavização
+    if len(ref_points) < 4:
+        return np.vstack((x_new, y_new)).T
+
+    # Ajusta o tamanho da janela de suavização, garantindo que seja ímpar e menor que o número de pontos
+    if smoothing_window >= n_points:
+        smoothing_window = n_points - 1 if (n_points - 1) % 2 == 1 else n_points - 2
+    if smoothing_window < polyorder + 2:
+        smoothing_window = polyorder + 2
+    if smoothing_window % 2 == 0:
+        smoothing_window += 1
+
+    # Aplica o filtro Savitzky-Golay para suavizar os dados interpolados
+    x_smooth = savgol_filter(x_new, window_length=smoothing_window, polyorder=polyorder)
+    y_smooth = savgol_filter(y_new, window_length=smoothing_window, polyorder=polyorder)
+    
+    # Retorna os pontos como matriz (n_points, 2)
+    return np.vstack((x_smooth, y_smooth)).T
 
 

@@ -3,4 +3,5 @@ xarray
 numba
 datetime
 pandas
+scipy
 IHSetUtils@ git+https://github.com/IHCantabria/IHSetUtils.git
