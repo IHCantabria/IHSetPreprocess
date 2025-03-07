@@ -12,7 +12,8 @@ import matplotlib.colors as mcolors
 import matplotlib.dates as mdates
 from pyproj import CRS, Transformer
 from IHSetUtils.geometry import abs_pos
-
+from scipy.interpolate import interp1d
+from scipy.signal import savgol_filter
 
 class wave_data(object):
     """
@@ -508,8 +509,13 @@ class obs_data(object):
         '''
         This function extract timeseries from CoastSat geojson MULTIPOINT output.
         '''
+        ## Interp refpoints to 1000 points and smooth it
+
+        ref_points_smoothed = interpolate_and_smooth(ref_points, n_points=1000)
+        
+
         domain = shoreline(self.shores, self.time_obs, epsg = epsg)
-        domain.setDomain(sea_point, 'draw', dx, refPoints=ref_points)
+        domain.setDomain(sea_point, 'draw', dx, refPoints=ref_points_smoothed)
         domain.setTransects(length)
 
         transects = []
@@ -713,3 +719,44 @@ def find_intersections(obs_shores, transects, gap_threshold=100):
 def filter_nans(x, y):
     mask = ~np.isnan(x) & ~np.isnan(y)
     return x[mask], y[mask]
+
+def interpolate_and_smooth(ref_points, n_points=1000, smoothing_window=51, polyorder=3):
+    """
+    Interpola os pontos de referência para n_points e aplica suavização.
+    
+    Parâmetros:
+      - ref_points: numpy array de shape (N,2) com coordenadas (x,y).
+      - n_points: número de pontos desejados (default=1000).
+      - smoothing_window: janela do filtro Savitzky-Golay (deve ser ímpar).
+      - polyorder: ordem do polinômio para o filtro Savitzky-Golay.
+    
+    Retorna:
+      - numpy array de shape (n_points,2) com os pontos interpolados e suavizados.
+    """
+    # Calcula a distância acumulada entre os pontos originais
+    distances = np.sqrt(np.diff(ref_points[:, 0])**2 + np.diff(ref_points[:, 1])**2)
+    cum_dist = np.hstack(([0], np.cumsum(distances)))
+    
+    # Cria uma nova grade de distâncias uniformemente espaçadas
+    new_distances = np.linspace(0, cum_dist[-1], n_points)
+    
+    # Interpola as coordenadas x e y separadamente usando interpolação cúbica
+    interp_func_x = interp1d(cum_dist, ref_points[:, 0], kind='cubic')
+    interp_func_y = interp1d(cum_dist, ref_points[:, 1], kind='cubic')
+    x_new = interp_func_x(new_distances)
+    y_new = interp_func_y(new_distances)
+    
+    # Ajusta o tamanho da janela de suavização, garantindo que seja ímpar e menor que o número de pontos
+    if smoothing_window >= n_points:
+        smoothing_window = n_points - 1 if (n_points - 1) % 2 == 1 else n_points - 2
+    if smoothing_window < polyorder + 2:
+        smoothing_window = polyorder + 2
+    if smoothing_window % 2 == 0:
+        smoothing_window += 1
+
+    # Aplica o filtro Savitzky-Golay para suavizar os dados interpolados
+    x_smooth = savgol_filter(x_new, window_length=smoothing_window, polyorder=polyorder)
+    y_smooth = savgol_filter(y_new, window_length=smoothing_window, polyorder=polyorder)
+    
+    # Retorna os pontos como matriz (n_points, 2)
+    return np.vstack((x_smooth, y_smooth)).T
