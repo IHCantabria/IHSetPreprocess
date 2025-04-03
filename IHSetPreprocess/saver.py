@@ -76,8 +76,8 @@ class save_SET_standard_netCDF(object):
             self.hs = np.concatenate((self.hs, wave_data.hs), axis=1)
             self.tp = np.concatenate((self.tp, wave_data.tp), axis=1)
             self.dir = np.concatenate((self.dir, wave_data.dir), axis=1)
-            self.lat = np.concatenate((self.lat, wave_data.lat), axis=0)
-            self.lon = np.concatenate((self.lon, wave_data.lon), axis=0)
+            self.lat_w = [self.lat_w, wave_data.lat]
+            self.lon_w = [self.lon_w, wave_data.lon]
             self.w_dataSource = self.w_dataSource+'/'+wave_data.dataSource
 
         
@@ -145,6 +145,9 @@ class save_SET_standard_netCDF(object):
 
     def export_netcdf(self, filepath):
         """ Export the dataset to a NetCDF file using xarray """
+
+        self.lat_w = np.array(self.lat_w).flatten()
+        self.lon_w = np.array(self.lon_w).flatten()
 
         if self.waves_epsg != 4326:
             crs_from = CRS.from_epsg(self.waves_epsg)
