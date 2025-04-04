@@ -94,13 +94,13 @@ class wave_data(object):
         else:
             return 'Data loaded correctly'
     
-    def add_coords(self, path):
+    def add_coords(self, cfg):
         """ Add coordinates to the handler """
 
-        coords = pd.read_csv(path)
-        self.lat = coords.lat.values
-        self.lon = coords.lon.values
-        self.epsg = coords.epsg.values[0]
+        # coords = pd.read_csv(path)
+        self.lat = cfg['lat']
+        self.lon = cfg['lon']
+        self.epsg = cfg['epsg']
 
     def HsRose(self):
         """
