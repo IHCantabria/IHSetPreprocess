@@ -98,8 +98,8 @@ class wave_data(object):
         """ Add coordinates to the handler """
 
         # coords = pd.read_csv(path)
-        self.lat = cfg['lat']
-        self.lon = cfg['lon']
+        self.lat = np.array([ cfg['lat'] ])
+        self.lon = np.array([ cfg['lon'] ])
         self.epsg = cfg['epsg']
 
     def HsRose(self):
