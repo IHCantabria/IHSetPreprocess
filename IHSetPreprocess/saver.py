@@ -76,8 +76,8 @@ class save_SET_standard_netCDF(object):
             self.hs = np.concatenate((self.hs, wave_data.hs), axis=1)
             self.tp = np.concatenate((self.tp, wave_data.tp), axis=1)
             self.dir = np.concatenate((self.dir, wave_data.dir), axis=1)
-            self.lat_w = [self.lat_w, wave_data.lat]
-            self.lon_w = [self.lon_w, wave_data.lon]
+            self.lat_w = np.concatenate((self.lat_w, wave_data.lat), axis=0)
+            self.lon_w = np.concatenate((self.lon_w, wave_data.lon), axis=0)
             self.w_dataSource = self.w_dataSource+'/'+wave_data.dataSource
 
         
