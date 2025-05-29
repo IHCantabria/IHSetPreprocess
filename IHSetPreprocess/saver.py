@@ -502,14 +502,11 @@ def find_pivotal_point(obs, xi, yi, phi):
     """
     Find the pivotal point of the shoreline
     """
-    # Interpolação para lidar com valores NaN em obs
-    Obs_interp = np.zeros_like(obs)
-    for i in range(obs.shape[1]):
-        Obs_interp[:, i] = np.interp(
-            np.arange(len(obs)),
-            np.flatnonzero(~np.isnan(obs[:, i])),
-            obs[~np.isnan(obs[:, i]), i]
-        )
+    # Lets get rid of every obs    # that has more than 10% of NaNs
+
+    nans_rot = np.sum(np.isnan(obs), axis=1) > 0.1 * obs.shape[1]
+    Obs_interp = obs[~nans_rot, :]
+    
     
     # Aplicando PCA
     pca = PCA(n_components=obs.shape[1])
