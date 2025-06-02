@@ -356,38 +356,56 @@ class sl_data(object):
         font = {'family': 'serif',
                 'weight': 'bold',
                 'size': 8}
-
-        fig, ax = plt.subplots(1, 2, figsize=(6, 3), dpi=200, linewidth=5, edgecolor="#04253a")
-
-        try:
-            sns.histplot(self.tide, bins=20, kde=True, color='blue', alpha=0.5, label='Tide', stat='density', ax=ax[0])
-            ax[0].set_xlabel('Sea level [m]', fontdict=font)
-            ax[0].set_ylabel('Density', fontdict=font)
-            ax[0].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
-            ax[0].legend()
-        except:
-            pass
-        try:
-            sns.histplot(self.surge, bins=20, kde=True, color='red', alpha=0.5, label='Surge', stat='density', ax=ax[1])
-            ax[1].set_xlabel('Sea level [m]', fontdict=font)
-            ax[1].set_ylabel('Density', fontdict=font)
-            ax[1].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
-            ax[1].legend()
-        except:
-            pass
-
-        plt.tight_layout()
-        plt.show()
-
-    # def readSLR(self, filePath):
-    #     """
-    #     Read sea level data
-    #     """
         
-    #     if self.dataSource_slr == None:
-    #         return 'Wrong data format'
-    #     else:
-    #         return 'Data loaded correctly'
+        if self.dataSource_surge is None and self.dataSource_tide is None:
+            print("No data available for surge or tide.")
+            return
+        elif self.dataSource_surge is not None and self.dataSource_tide is not None:
+            print("Both surge and tide data available.")
+            _, ax = plt.subplots(1, 2, figsize=(6, 3), dpi=200, linewidth=5, edgecolor="#04253a")
+
+            try:
+                sns.histplot(self.tide, bins=20, kde=True, color='blue', alpha=0.5, label='Tide', stat='density', ax=ax[0])
+                ax[0].set_xlabel('Sea level [m]', fontdict=font)
+                ax[0].set_ylabel('Density', fontdict=font)
+                ax[0].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+                ax[0].legend()
+            except:
+                pass
+            try:
+                sns.histplot(self.surge, bins=20, kde=True, color='red', alpha=0.5, label='Surge', stat='density', ax=ax[1])
+                ax[1].set_xlabel('Sea level [m]', fontdict=font)
+                ax[1].set_ylabel('Density', fontdict=font)
+                ax[1].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+                ax[1].legend()
+            except:
+                pass
+
+            plt.tight_layout()
+            plt.show()
+
+        elif self.dataSource_surge is not None:
+            print("Only surge data available.")
+            fig, ax = plt.subplots(figsize=(3.5, 3), dpi=200, linewidth=5, edgecolor="#04253a")
+
+            sns.histplot(self.surge, bins=20, kde=True, color='red', alpha=0.5, label='Surge', stat='density', ax=ax)
+            ax.set_xlabel('Sea level [m]', fontdict=font)
+            ax.set_ylabel('Density', fontdict=font)
+            ax.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+            plt.tight_layout()
+            plt.show()
+
+        elif self.dataSource_tide is not None:
+            print("Only tide data available.")
+            fig, ax = plt.subplots(figsize=(3.5, 3), dpi=200, linewidth=5, edgecolor="#04253a")
+
+            sns.histplot(self.tide, bins=20, kde=True, color='blue', alpha=0.5, label='Tide', stat='density', ax=ax)
+            ax.set_xlabel('Sea level [m]', fontdict=font)
+            ax.set_ylabel('Density', fontdict=font)
+            ax.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+            plt.tight_layout()
+            plt.show()
+
 
 class obs_data(object):
     """
@@ -466,7 +484,7 @@ class obs_data(object):
                 shores[str(i)]['x'] = np.array([coords[i][j][0] for j in range(len(coords[i]))])
                 shores[str(i)]['y'] = np.array([coords[i][j][1] for j in range(len(coords[i]))])
             self.shores = shores
-            self.dataSource = 'CoastSat'
+            self.dataSource = 'GeoJSON'
         except Exception as e:
                 print(e)
                 pass
@@ -502,7 +520,6 @@ class obs_data(object):
             x, y = abs_pos(self.xi, self.yi, np.deg2rad(self.phi), self.obs[i, :])
             self.shores[str(i)]['x'] = x
             self.shores[str(i)]['y'] = y
-
 
     
     def CoastSatR(self, epsg, sea_point, ref_points, dx, length=500):
@@ -616,6 +633,100 @@ class obs_data(object):
         plt.grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
         plt.tight_layout()
         plt.show()
+
+    def PCA_Analysis(self):
+        """
+        Perform PCA analysis on the observation data
+        """
+        plt.rcParams.update({'font.family': 'serif'})
+        plt.rcParams.update({'font.size': 9})
+        plt.rcParams.update({'font.weight': 'bold'})
+        font = {'family': 'serif',
+                'weight': 'bold',
+                'size': 10}
+        from sklearn.decomposition import PCA
+
+        # Now we can apply PCA to the observations
+        matrix_obs = pd.DataFrame(self.obs, columns=[f'Transect {i+1}' for i in range(self.ntrs)])
+        matrix_obs['time'] = self.time_obs
+        pca = PCA(n_components=3)
+        pca.fit(matrix_obs.drop(columns=['time']).dropna())
+        # Transform the observations
+        transformed_obs = pca.transform(matrix_obs.drop(columns=['time']).dropna())
+
+        dists = np.sqrt((self.xi[0] - self.xi[1:])**2 + (self.yi[0] - self.yi[1:])**2)
+        dists = np.insert(dists, 0, 0)  # Insert 0 for the first transect
+
+        var = pca.explained_variance_ratio_ * 100  # Variance explained by each component in percentage
+
+        u = pca.components_.T
+        # And we mark with a vertical line the intersection between components 1 and 2
+        diff = u[:, 0] - u[:, 1]
+        sign_changes = np.where(np.diff(np.sign(diff)))[0]
+        idx = sign_changes[0]
+
+        # Interpolação linear para encontrar a posição exata da interseção
+        x1, x2 = dists[idx], dists[idx + 1]
+        y1, y2 = diff[idx], diff[idx + 1]
+        # Calculando o ponto de interseção usando interpolação linear
+        d_intersect = x1 - y1 * (x2 - x1) / (y2 - y1)
+
+        fig, (ax_left, ax_right) = plt.subplots(
+            1, 2,
+            figsize=(15, 4),
+            gridspec_kw={'width_ratios': [1, 3]}  # 1 parte à esquerda, 3 partes à direita → 25% / 75%
+        )
+
+        # ======================================================
+        # —— PAINEL DA DIREITA (ocupando 75% da largura) ——
+        # (aqui você desenha o que antes era o “painel de cima”)
+        # ======================================================
+
+        ax_right.plot(
+            matrix_obs.dropna()['time'],
+            transformed_obs[:, 0],
+            label=rf'$C_1 (t)$ ({var[0]:.2f}%)',
+            color='black'
+        )
+        ax_right.plot(
+            matrix_obs.dropna()['time'],
+            transformed_obs[:, 1],
+            label=rf'$C_2 (t)$ ({var[1]:.2f}%)',
+            color='red'
+        )
+        ax_right.plot(
+            matrix_obs.dropna()['time'],
+            transformed_obs[:, 2],
+            label=rf'$C_3 (t)$ ({var[2]:.2f}%)',
+            color='blue'
+        )
+        ax_right.set_ylabel(rf'$C_n (t)$', fontdict=font)
+        ax_right.set_xlim(matrix_obs['time'].min(), matrix_obs['time'].max())
+        ax_right.legend(ncols=3, loc='upper center', bbox_to_anchor=(0.5, 1.15))
+        # ax_right.grid()   # opcional, caso queira grade
+
+        # ======================================================
+        # —— PAINEL DA ESQUERDA (ocupando 25% da largura) ——
+        # (aqui você desenha o que antes era o “painel de baixo”)
+        # ======================================================
+
+        ax_left.plot(dists, u[:, 0], label=rf'$e_1 (y)$', color='black')
+        ax_left.plot(dists, u[:, 1], label=rf'$e_2 (y)$', color='red')
+
+        ax_left.axvline(x=d_intersect, color='green', linestyle='--', label=rf'$Pivotal Point$')
+
+        # ax_left.set_xticks(dists)
+        # ax_left.set_xticklabels(labels_trs, rotation=45)
+        ax_left.set_xlim(0, dists.max())
+        ax_left.set_xlabel('Distance along Transects (m)', fontdict=font)
+        ax_left.set_ylabel(rf'$e_n (y)$', fontdict=font)
+        ax_left.grid()
+        ax_left.legend(ncols=3, loc='upper center', bbox_to_anchor=(0.5, 1.15))
+
+        plt.tight_layout()
+        plt.show()
+
+
 
 def find_intersections2(obs_shores, transects, gap_threshold=100):
     results = {}

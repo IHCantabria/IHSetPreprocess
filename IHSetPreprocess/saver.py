@@ -349,6 +349,11 @@ class save_SET_standard_netCDF(object):
         # Export to NetCDF
         ds.to_netcdf(filepath, engine="netcdf4")
 
+        if self.obs_dataSource != 'CSV file (transects)':
+            # Export transects to a CSV file
+            transects_filepath = filepath.replace('.nc', '_transects.csv')
+            export_transects(self.xi, self.yi, self.xf, self.yf, self.phi, self.epsg, transects_filepath)
+
         print(f"File {filepath} saved correctly.")
 
     def check_models(self):
@@ -583,3 +588,24 @@ def calculate_obs_average(obs):
     mask_nan = np.isnan(mean_obs)
 
     return mean_obs, mask_nan
+
+def export_transects(xi, yi, xf, yf, phi, epsg, filepath):
+    """
+    Export the transects to a .csv file
+    """
+    import pandas as pd
+
+    data = {
+        'xi': xi,
+        'yi': yi,
+        'xf': xf,
+        'yf': yf,
+        'phi': phi,
+        'epsg': epsg
+    }
+
+    df = pd.DataFrame(data)
+
+    df.to_csv(filepath, index=False)
+
+    print(f"Transects exported to {filepath}")
