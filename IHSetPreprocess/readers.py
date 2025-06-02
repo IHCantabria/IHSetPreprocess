@@ -364,26 +364,19 @@ class sl_data(object):
             print("Both surge and tide data available.")
             _, ax = plt.subplots(1, 2, figsize=(6, 3), dpi=200, linewidth=5, edgecolor="#04253a")
 
-            try:
-                sns.histplot(self.tide, bins=20, kde=True, color='blue', alpha=0.5, label='Tide', stat='density', ax=ax[0])
-                ax[0].set_xlabel('Sea level [m]', fontdict=font)
-                ax[0].set_ylabel('Density', fontdict=font)
-                ax[0].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
-                ax[0].legend()
-            except:
-                pass
-            try:
-                sns.histplot(self.surge, bins=20, kde=True, color='red', alpha=0.5, label='Surge', stat='density', ax=ax[1])
-                ax[1].set_xlabel('Sea level [m]', fontdict=font)
-                ax[1].set_ylabel('Density', fontdict=font)
-                ax[1].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
-                ax[1].legend()
-            except:
-                pass
-
+            sns.histplot(self.tide, bins=20, kde=True, color='blue', alpha=0.5, label='Tide', stat='density', ax=ax[0])
+            ax[0].set_xlabel('Sea level [m]', fontdict=font)
+            ax[0].set_ylabel('Density', fontdict=font)
+            ax[0].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+            ax[0].legend()
+            sns.histplot(self.surge, bins=20, kde=True, color='red', alpha=0.5, label='Surge', stat='density', ax=ax[1])
+            ax[1].set_xlabel('Sea level [m]', fontdict=font)
+            ax[1].set_ylabel('Density', fontdict=font)
+            ax[1].grid(visible=True, which='both', linestyle = '--', linewidth = 0.5)
+            ax[1].legend()
             plt.tight_layout()
             plt.show()
-
+        
         elif self.dataSource_surge is not None:
             print("Only surge data available.")
             fig, ax = plt.subplots(figsize=(3.5, 3), dpi=200, linewidth=5, edgecolor="#04253a")
