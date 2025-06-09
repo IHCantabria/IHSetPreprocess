@@ -457,9 +457,9 @@ def calculate_rotation(X0, Y0, phi, dist):
     for i in range(dist.shape[1]):
         detrended_dist[:, i] = dist[:, i] - mean_shoreline[i]
 
-    # We will calculate the rotation only for the times where we at least 80% of the data
+    # We will calculate the rotation only for the times where we at least 95% of the data
 
-    nans_rot = np.sum(np.isnan(detrended_dist), axis=1) > 0.2 * dist.shape[1]
+    nans_rot = np.sum(np.isnan(detrended_dist), axis=1) > 0.05 * dist.shape[1]
     
     alpha = np.zeros(dist.shape[0]) * np.nan
     
