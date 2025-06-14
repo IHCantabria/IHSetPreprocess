@@ -47,6 +47,7 @@ class save_SET_standard_netCDF(object):
         self.yf = None
         self.phi = None
         self.epsg = None
+        self.depth = None
         self.attrs = None
         self.applicable_models = None
         self.waves_epsg = None
@@ -69,6 +70,7 @@ class save_SET_standard_netCDF(object):
             self.dir = wave_data.dir
             self.lat_w = wave_data.lat
             self.lon_w = wave_data.lon
+            self.depth = wave_data.depth
             self.time = wave_data.time
             self.w_dataSource = wave_data.dataSource
             self.waves_epsg = wave_data.epsg
@@ -78,6 +80,7 @@ class save_SET_standard_netCDF(object):
             self.dir = np.concatenate((self.dir, wave_data.dir), axis=1)
             self.lat_w = np.concatenate((self.lat_w, wave_data.lat), axis=0)
             self.lon_w = np.concatenate((self.lon_w, wave_data.lon), axis=0)
+            self.depth = np.concatenate((self.depth, wave_data.depth), axis=0)
             self.w_dataSource = self.w_dataSource+'/'+wave_data.dataSource
 
         
@@ -111,6 +114,7 @@ class save_SET_standard_netCDF(object):
         self.yi = obs_data.yi
         self.xf = obs_data.xf
         self.yf = obs_data.yf
+        obs_data.make_phi_0_to_360()
         self.phi = obs_data.phi
         self.epsg = obs_data.epsg
 
@@ -282,6 +286,11 @@ class save_SET_standard_netCDF(object):
                     "standard_name": "longitude_of_waves",
                     "long_name": "Longitude of waves"
                 }),
+                "waves_depth": ("waves_depth", self.depth, {
+                    "units": "meters",
+                    "standard_name": "water_depth_in_wave_points",
+                    "long_name": "Water Depth in Wave Points"
+                }),
                 "ntrs": ("ntrs", np.arange(self.ntrs), {
                     "units": "number_of",
                     "standard_name": "number_of_trs",
@@ -397,11 +406,11 @@ class save_SET_standard_netCDF(object):
         Check the consistency of the data
         """
         interp = interpolator(
-            self.hs, self.tp, self.dir, self.tide, self.surge, self.slr, self.obs, self.time, self.time_surge, self.time_tide, self.time_slr,self.lat_w, self.lon_w, self.xf, self.yf, self.epsg, self.waves_epsg
+            self.hs, self.tp, self.dir, self.tide, self.surge, self.slr, self.obs, self.time, self.time_surge, self.time_tide, self.time_slr,self.lat_w, self.lon_w, self.xf, self.yf, self.epsg, self.waves_epsg, self.depth
         )
 
         interp.check_times()
-        interp. check_dimensions()
+        interp.check_dimensions()
 
         if self.ntrs > 1:
             self.rot, self.mask_nan_rot = calculate_rotation(self.xi, self.yi, self.phi, self.obs)
@@ -440,6 +449,7 @@ class save_SET_standard_netCDF(object):
         self.time = interp.time
         self.lat = interp.lat
         self.lon = interp.lon
+        self.depth = interp.depth
         self.mask_nan_obs = interp.mask_nan_obs
 
 

@@ -14,7 +14,7 @@ class interpolator(object):
     This class reads input datasets, performs its preprocess.
     """
 
-    def __init__(self, hs, tp, dir, tide, surge, slr, obs, time, time_surge, time_tide, time_slr, lat, lon, xf, yf, epsg, waves_epsg):
+    def __init__(self, hs, tp, dir, tide, surge, slr, obs, time, time_surge, time_tide, time_slr, lat, lon, xf, yf, epsg, waves_epsg, depth):
         """
         Define the file path, data source, and dataset
         """
@@ -35,6 +35,7 @@ class interpolator(object):
         self.xf = xf
         self.yf = yf
         self.epsg = epsg
+        self.depth = depth
         if waves_epsg is None:
             self.waves_epsg = 4326
         else:
@@ -135,6 +136,7 @@ class interpolator(object):
         self.tide = interpWaves(self.xf, self.yf, x_waves, y_waves, self.tide)
         self.surge = interpWaves(self.xf, self.yf, x_waves, y_waves, self.surge)
         self.slr = interpWaves(self.xf, self.yf, x_waves, y_waves, self.slr)
+        self.depth = interpDepth(self.xf, self.yf, x_waves, y_waves, self.depth)
         self.lat = transformer.transform(self.xf, self.yf)[0]
         self.lon = transformer.transform(self.xf, self.yf)[1]
         
@@ -205,6 +207,16 @@ def interpWaves(x, y, xw, yw, var):
 
     return res
             
+def interpDepth(x, y, xw, yw, depth):
+
+    d = np.sqrt((x-x[0]) ** 2 + (y-y[0]) ** 2)
+    dd = np.sqrt((x[0]-xw) ** 2 + (y[0]-yw) ** 2)
+
+    res = np.zeros(len(x))
+    res =  np.interp(d, dd, depth)
+
+    return res
+
 def interpolate_and_smooth(ref_points, n_points=1000, smoothing_window=101, polyorder=3):
     """
     Interpola os pontos de referência para n_points e aplica suavização.

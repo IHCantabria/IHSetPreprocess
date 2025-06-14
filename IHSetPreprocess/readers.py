@@ -52,10 +52,11 @@ class wave_data(object):
             self.time = pd.to_datetime(self.dataTime - 719529, unit='d').round('s').to_pydatetime()
             # self.time = np.vectorize(lambda x: np.datetime64(x))(self.time)
             self.hs = self.data['hs'].flatten()
-            self.tp = self.data['tps'].flatten()
+            self.tp = 1/self.data['fp'].flatten()
             self.dir = self.data['dir'].flatten()
             self.lat = self.data['lat'].flatten()
             self.lon = self.data['lon'].flatten()
+            self.depth = self.data['bat'].flatten()
             self.dataSource = 'IH-DATA'
             self.epsg = 4326
         except:
@@ -77,8 +78,10 @@ class wave_data(object):
             self.hs = self.data.VHM0.values.flatten()
             self.tp = self.data.VTPK.values.flatten()
             self.dir = self.data.VMDR.values.flatten()
+            
             self.lat = self.data.latitude.values
             self.lon = self.data.longitude.values
+            self.depth = np.array([28.0])
             self.epsg = 4326
             self.dataSource = 'Copernicus'
         except:
@@ -96,11 +99,21 @@ class wave_data(object):
     
     def add_coords(self, cfg):
         """ Add coordinates to the handler """
-
         # coords = pd.read_csv(path)
         self.lat = np.array([ cfg['lat'] ])
         self.lon = np.array([ cfg['lon'] ])
+        self.depth = np.array([ cfg['depth'] ])
         self.epsg = cfg['epsg']
+    
+    def add_depth(self, path):
+        """ Add depth to the handler """
+        try:
+            ds = xr.open_dataset(path)
+            self.depth = ds.deptho.values
+            self.depth = self.depth.reshape(-1,1)
+        except:
+            print('Error reading depth data')
+            return 'Error reading depth data'
 
     def HsRose(self):
         """
@@ -545,6 +558,12 @@ class obs_data(object):
         self.phi = domain.trs.phi
         self.epsg = domain.epsg
         # print(f"flag_f: {domain.flag_f}")
+
+    def make_phi_0_to_360(self):
+        """
+        Make phi from 0 to 360 degrees
+        """
+        self.phi = np.mod(self.phi, 360)
         
     def obs_timeseries(self):
         """
