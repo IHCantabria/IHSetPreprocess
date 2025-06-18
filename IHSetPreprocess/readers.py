@@ -81,7 +81,7 @@ class wave_data(object):
             
             self.lat = self.data.latitude.values
             self.lon = self.data.longitude.values
-            self.depth = np.array([28.0])
+            self.depth = np.array([500])
             self.epsg = 4326
             self.dataSource = 'Copernicus'
         except:
@@ -110,7 +110,7 @@ class wave_data(object):
         try:
             ds = xr.open_dataset(path)
             self.depth = ds.deptho.values
-            self.depth = self.depth.reshape(-1,1)
+            self.depth = self.depth.flatten()
         except:
             print('Error reading depth data')
             return 'Error reading depth data'
