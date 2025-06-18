@@ -139,6 +139,10 @@ class interpolator(object):
         self.depth = interpDepth(self.xf, self.yf, x_waves, y_waves, self.depth)
         self.lat = transformer.transform(self.xf, self.yf)[0]
         self.lon = transformer.transform(self.xf, self.yf)[1]
+
+        self.hs[self.hs <= 0.1] = 0.1
+        self.tp[self.tp <= 2] = 2
+
         
     def erase_nones(self):
         """
