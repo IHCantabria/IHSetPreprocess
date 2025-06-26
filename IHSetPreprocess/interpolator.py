@@ -117,17 +117,17 @@ class interpolator(object):
         if self.epsg != self.waves_epsg:
             crs = CRS.from_epsg(self.epsg)
             crs_waves = CRS.from_epsg(self.waves_epsg)
-            transformer_waves_to_trs = Transformer.from_crs(crs_waves, crs)
-            x_waves, y_waves = transformer_waves_to_trs.transform(self.lat, self.lon)
+            transformer_waves_to_trs = Transformer.from_crs(crs_waves, crs, always_xy=True)
+            x_waves, y_waves = transformer_waves_to_trs.transform(self.lon, self.lat)
             x_waves = np.array(x_waves)
             y_waves = np.array(y_waves)
         else:
-            x_waves = self.lat
-            y_waves = self.lon
+            x_waves = self.lon
+            y_waves = self.lat
         
         crs_proj = CRS.from_epsg(self.epsg)
         crs_geo = CRS.from_epsg(4326)
-        transformer = Transformer.from_crs(crs_proj, crs_geo)
+        transformer = Transformer.from_crs(crs_proj, crs_geo, always_xy=True)
         
         # Now we interpolate the variables to each transect endpoint (xf, yf)
         self.hs = interpWaves(self.xf, self.yf,x_waves, y_waves,  self.hs)
@@ -137,8 +137,7 @@ class interpolator(object):
         self.surge = interpWaves(self.xf, self.yf, x_waves, y_waves, self.surge)
         self.slr = interpWaves(self.xf, self.yf, x_waves, y_waves, self.slr)
         self.depth = interpDepth(self.xf, self.yf, x_waves, y_waves, self.depth)
-        self.lat = transformer.transform(self.xf, self.yf)[0]
-        self.lon = transformer.transform(self.xf, self.yf)[1]
+        self.lon, self.lat = transformer.transform(self.xf, self.yf)
 
         self.hs[self.hs <= 0.1] = 0.1
         self.tp[self.tp <= 2] = 2
