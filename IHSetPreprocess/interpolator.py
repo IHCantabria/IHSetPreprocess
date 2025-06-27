@@ -4,6 +4,8 @@ from pyproj import CRS, Transformer
 import pandas as pd
 from scipy.interpolate import interp1d
 from scipy.signal import savgol_filter
+from numba import njit
+
 
 class interpolator(object):
     """
@@ -130,9 +132,9 @@ class interpolator(object):
         transformer = Transformer.from_crs(crs_proj, crs_geo, always_xy=True)
         
         # Now we interpolate the variables to each transect endpoint (xf, yf)
-        self.hs = interpWaves(self.xf, self.yf,x_waves, y_waves,  self.hs)
-        self.tp = interpWaves(self.xf, self.yf,x_waves, y_waves,  self.tp)
-        self.dir = interpWaves(self.xf, self.yf,x_waves, y_waves,  self.dir)
+        self.hs = interpWaves(self.xf, self.yf, x_waves, y_waves,  self.hs)
+        self.tp = interpWaves(self.xf, self.yf, x_waves, y_waves,  self.tp)
+        self.dir = interpWaves(self.xf, self.yf, x_waves, y_waves,  self.dir)
         self.tide = interpWaves(self.xf, self.yf, x_waves, y_waves, self.tide)
         self.surge = interpWaves(self.xf, self.yf, x_waves, y_waves, self.surge)
         self.slr = interpWaves(self.xf, self.yf, x_waves, y_waves, self.slr)
@@ -195,28 +197,80 @@ def fill_nan(var):
     
     return res
    
-from numba import jit
-
-@jit
+@njit(cache=True)
 def interpWaves(x, y, xw, yw, var):
+    """
+    Interpolação por vizinho mais próximo JIT-compilada com Numba.
 
-    d = np.sqrt((x-x[0]) ** 2 + (y-y[0]) ** 2)
-    dd = np.sqrt((x[0]-xw) ** 2 + (y[0]-yw) ** 2)
+    Parâmetros
+    ----------
+    x, y   : arrays 1D de destino (M,)
+    xw, yw : arrays 1D de origem   (N,)
+    var     : array 2D de valores  (T, N)
 
-    res = np.zeros((var.shape[0], len(x)))
+    Retorna
+    -------
+    res     : array 2D interpolada (T, M), onde
+              res[t, j] = var[t, k] e
+              k = argmin_k sqrt((x[j]-xw[k])² + (y[j]-yw[k])²)
+    """
+    T, N = var.shape
+    M    = x.shape[0]
+    res  = np.empty((T, M), dtype=var.dtype)
 
-    for i in range(var.shape[0]):
-        res[i,:] =  np.interp(d, dd, var[i,:])
+    for t in range(T):
+        for j in range(M):
+            xj = x[j]
+            yj = y[j]
+            # busca vizinho mais próximo
+            min_d2 = 1e18
+            idx    = 0
+            for k in range(N):
+                dx = xj - xw[k]
+                dy = yj - yw[k]
+                d2 = dx*dx + dy*dy
+                if d2 < min_d2:
+                    min_d2 = d2
+                    idx    = k
+            res[t, j] = var[t, idx]
 
     return res
             
+@njit(cache=True)
 def interpDepth(x, y, xw, yw, depth):
+    """
+    Interpolação de profundidade por vizinho mais próximo (Numba).
 
-    d = np.sqrt((x-x[0]) ** 2 + (y-y[0]) ** 2)
-    dd = np.sqrt((x[0]-xw) ** 2 + (y[0]-yw) ** 2)
+    Parâmetros
+    ----------
+    x, y   : arrays 1D de destino (M,)
+    xw, yw : arrays 1D de pontos de profundidade (N,)
+    depth  : array 1D de profundidades      (N,)
 
-    res = np.zeros(len(x))
-    res =  np.interp(d, dd, depth)
+    Retorna
+    -------
+    res    : array 1D (M,) onde
+             res[j] = depth[k] com k = argmin_k dist²((x[j],y[j]),(xw[k],yw[k]))
+    """
+    M = x.shape[0]
+    N = xw.shape[0]
+    res = np.empty(M, dtype=depth.dtype)
+
+    for j in range(M):
+        xj = x[j]
+        yj = y[j]
+        # inicializa com valor alto
+        min_d2 = 1e18
+        idx    = 0
+        # busca vizinho mais próximo
+        for k in range(N):
+            dx = xj - xw[k]
+            dy = yj - yw[k]
+            d2 = dx*dx + dy*dy
+            if d2 < min_d2:
+                min_d2 = d2
+                idx    = k
+        res[j] = depth[idx]
 
     return res
 

@@ -156,7 +156,7 @@ class save_SET_standard_netCDF(object):
         if self.waves_epsg != 4326:
             crs_from = CRS.from_epsg(self.waves_epsg)
             crs_to = CRS.from_epsg(4326)
-            transformer = Transformer.from_crs(crs_from, crs_to)
+            transformer = Transformer.from_crs(crs_from, crs_to, always_xy=True)
             self.lon_w, self.lat_w = transformer.transform(self.lon_w, self.lat_w)
 
         # Calcular estatísticas para cada variável
