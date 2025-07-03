@@ -545,8 +545,8 @@ class obs_data(object):
         for i in range(len(domain.trs.xi)):
             transects.append({'xi': domain.trs.xi[i], 'yi': domain.trs.yi[i], 'xf': domain.trs.xf[i], 'yf': domain.trs.yf[i]})
         
-        dists = find_intersections(self.shores, transects)
-        intersections = find_intersections2(self.shores, transects)
+        dists = find_intersections(self.shores, transects, 2*dx)
+        intersections = find_intersections2(self.shores, transects, 2*dx)
 
         self.obs = dists
         self.ntrs = len(transects)
@@ -778,6 +778,23 @@ def find_intersections2(obs_shores, transects, gap_threshold=100):
 
     return results
 
+# def split_segments(x, y, gap_threshold=100):
+#     segments = []
+#     current_segment = [(x[0], y[0])]
+
+#     for i in range(1, len(x)):
+#         dist = np.sqrt((x[i] - x[i-1])**2 + (y[i] - y[i-1])**2)
+#         if dist > gap_threshold:
+#             segments.append(LineString(current_segment))
+#             current_segment = [(x[i], y[i])]
+#         else:
+#             current_segment.append((x[i], y[i]))
+
+#     if current_segment:
+#         segments.append(LineString(current_segment))
+
+#     return segments
+
 def split_segments(x, y, gap_threshold=100):
     segments = []
     current_segment = [(x[0], y[0])]
@@ -785,12 +802,13 @@ def split_segments(x, y, gap_threshold=100):
     for i in range(1, len(x)):
         dist = np.sqrt((x[i] - x[i-1])**2 + (y[i] - y[i-1])**2)
         if dist > gap_threshold:
-            segments.append(LineString(current_segment))
+            if len(current_segment) > 1:  # Asegurarse de que el segmento tenga al menos 2 puntos
+                segments.append(LineString(current_segment))
             current_segment = [(x[i], y[i])]
         else:
             current_segment.append((x[i], y[i]))
 
-    if current_segment:
+    if len(current_segment) > 1:  # Asegurarse de que el último segmento tenga al menos 2 puntos
         segments.append(LineString(current_segment))
 
     return segments
